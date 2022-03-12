@@ -19,8 +19,8 @@
 
 #include "camera_pins.h"
 
-const char* ssid = "WLAN-886864";
-const char* password = "17781912408437034468";
+const char* ssid = "ssid";
+const char* password = "password";
 
 const char * udpAddress = "192.168.2.104";
 const int udpPort = 9998;

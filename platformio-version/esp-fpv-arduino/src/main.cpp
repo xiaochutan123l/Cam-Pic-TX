@@ -22,14 +22,13 @@
 
 #include "camera_pins.h"
 
-// WiFi 
+// WiFi ssid and password
 const char* ssid = "";
 const char* password = "";
-// UDP server address
+// UDP server address and port
 const IPAddress udpAddress = IPAddress(192,168,2,104);
 const int udpPort = 9998;
 
-//void startCameraServer();
 void init_camera();
 int start_wifi();
 camera_fb_t * get_frame();
@@ -38,13 +37,12 @@ void udp_packet_handler(AsyncUDPPacket packet);
 void send_frame(const uint8_t * buf, size_t len, const uint16_t chunk_len);
 void send_init_udp();
 
-// AsyncUDP is implemented using FreeRTOS. Recv and send multitask
+// AsyncUDP is implemented using FreeRTOS, thus it can concurrently receive and send packet.
 AsyncUDP udp;
 
 void setup() {
   Serial.begin(115200);
   //Serial.setDebugOutput(true);
-  Serial.println("Start setup...");
   Serial.println("Start init camera...");
   init_camera();
   Serial.println("Start init wifi...");
@@ -55,13 +53,17 @@ void setup() {
   send_init_udp();
   Serial.println("Start get frame...");
 
+  // Get a frame from camera
   camera_fb_t * fb = get_frame();
   Serial.println("got camera frame");
+  // Get the data buffer
   const uint8_t *data = fb->buf;
-  const uint16_t chunk_len = 1460;
+  // Set chunk length 1400, max.1436. For UDP payload
+  const uint16_t chunk_len = 1400;
   //TODO: pack header for each udp payload.
   //pack_header()
   Serial.println("send to server");
+  // Send the entire frame data. Of course it should be fragmented to fit the UDP payload size.
   send_frame(data, fb->len, chunk_len);
   Serial.println("already send");
 }
@@ -135,6 +137,10 @@ void init_camera(){
   #endif
 }
 
+
+/*
+Connect to WiFi.
+*/
 int start_wifi(){
   WiFi.begin(ssid, password);
 
@@ -146,6 +152,10 @@ int start_wifi(){
   return 1;
 }
 
+
+/*
+Get a frame from camera, and return the data buffer pointer.
+*/
 camera_fb_t * get_frame(){
   camera_fb_t * fb = esp_camera_fb_get();
   if (!fb) {
@@ -156,13 +166,17 @@ camera_fb_t * get_frame(){
   Serial.println(fb->width);
   Serial.println(fb->height);
   Serial.println(fb->format);
-  //Serial.println((uint8_t)*fb->buf);
   Serial.println(fb->len);
   return fb;
 }
 
+/*
+Set the UDP server IP and port.
+AsyncUDP can receive packet without blocking the program,
+the UDP packet handler method is binded by udp.onPacket(),
+once a UDP packet is comming, the udp_packet_handler() will be called.
+*/
 int init_async_udp(){
-  // make ipaddress more elegant.
   if (udp.connect(udpAddress, udpPort)) { 
     //TODO: send a few packets first for the connection with server.
     Serial.println("UDP connected");                
@@ -171,6 +185,12 @@ int init_async_udp(){
   return 1;
 }
 
+
+/*
+Say hello to server. 
+Insure that the UDP communication is available.
+TODO: communicate with UDP Server interactively similar to TCP handshake.
+*/
 void send_init_udp(){
   const uint8_t buffer[20] = "hello world";
   for (int i = 0; i< 5; i++){
@@ -183,21 +203,31 @@ void send_init_udp(){
   Serial.println("start sending udp");
 }
 
+
+/*
+UDP packet handler.
+TODO: parse the incomming packet and extract the control message from Server.
+      configure parameters on demand.
+*/
 void udp_packet_handler(AsyncUDPPacket packet){
   // handle incomming udp packets.
   Serial.println("received sth.");
 }
 
+
+/*
+Fragment the entire frame buffer and send them out.
+TODO: pack and insert header field for each packet.
+*/
 void send_frame(const uint8_t * buf, size_t len, const uint16_t chunk_len){
-  uint8_t buffer[chunk_len];
-  size_t blen = sizeof(buffer);
-  size_t rest = len % blen;
+  uint8_t buffer[chunk_len];       // send buffer
+  size_t blen = sizeof(buffer);   // buffer length
+  size_t rest = len % blen;       
   int count = 0;
   for (uint8_t i = 0; i < len / blen; ++i) {
     memcpy(buffer, buf + (i * blen), blen);
     udp.write(buffer, chunk_len);
     count += 1;
-    //delay();
   }
 
   if (rest) {

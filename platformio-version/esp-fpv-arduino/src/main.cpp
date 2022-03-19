@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "AsyncUDP.h"
 #include "img_converters.h"
+#include "packet_handler.h"
 //
 // WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality
 //            Ensure ESP32 Wrover Module or other board with PSRAM is selected
@@ -29,6 +30,8 @@ const char* password = "";
 const IPAddress udpAddress = IPAddress(192,168,2,104);
 const int udpPort = 9998;
 
+uint16_t chunk_id = 0;
+
 void init_camera();
 int start_wifi();
 camera_fb_t * get_frame();
@@ -36,6 +39,7 @@ int init_async_udp();
 void udp_packet_handler(AsyncUDPPacket packet);
 void send_frame(const uint8_t * buf, size_t len, const uint16_t chunk_len);
 void send_init_udp();
+void send_chunk(uint8_t * buffer, struct chunk_header &hdr, const uint8_t * msg_buffer, size_t msg_len);
 
 // AsyncUDP is implemented using FreeRTOS, thus it can concurrently receive and send packet.
 AsyncUDP udp;
@@ -59,12 +63,12 @@ void setup() {
   // Get the data buffer
   const uint8_t *data = fb->buf;
   // Set chunk length 1400, max.1436. For UDP payload
-  const uint16_t chunk_len = 1400;
+  const uint16_t pld_len = PAYLOAD_SIZE;
   //TODO: pack header for each udp payload.
   //pack_header()
   Serial.println("send to server");
   // Send the entire frame data. Of course it should be fragmented to fit the UDP payload size.
-  send_frame(data, fb->len, chunk_len);
+  send_frame(data, fb->len, pld_len);
   Serial.println("already send");
 }
 
@@ -192,9 +196,12 @@ Insure that the UDP communication is available.
 TODO: communicate with UDP Server interactively similar to TCP handshake.
 */
 void send_init_udp(){
-  const uint8_t buffer[20] = "hello world";
-  for (int i = 0; i< 5; i++){
-    udp.write(buffer, 11);
+  const uint8_t msg[] = "hello world";
+  uint8_t buffer[30];
+  
+  for (uint16_t i = 0; i< 5; i++){
+    struct chunk_header hdr = {0, 0, 5, (uint16_t)(i+1), sizeof(msg)};
+    send_chunk(buffer, hdr, msg, sizeof(msg));
     Serial.println("sent udp packet");
     delay(2000);
   }
@@ -219,24 +226,39 @@ void udp_packet_handler(AsyncUDPPacket packet){
 Fragment the entire frame buffer and send them out.
 TODO: pack and insert header field for each packet.
 */
-void send_frame(const uint8_t * buf, size_t len, const uint16_t chunk_len){
-  uint8_t buffer[chunk_len];       // send buffer
-  size_t blen = sizeof(buffer);   // buffer length
-  size_t rest = len % blen;       
-  int count = 0;
-  for (uint8_t i = 0; i < len / blen; ++i) {
-    memcpy(buffer, buf + (i * blen), blen);
-    udp.write(buffer, chunk_len);
-    count += 1;
+void send_frame(const uint8_t * buf, size_t frame_len, const uint16_t pld_len){
+
+  uint8_t snd_buffer[pld_len];       // send buffer
+  uint16_t snd_buf_len = sizeof(snd_buffer);   // send buffer length
+  uint16_t rest = frame_len % CHUNK_LEN;       // last chunk data length
+  uint16_t total_chunk_num = frame_len / CHUNK_LEN;   // total chunk number
+  if (rest){
+    total_chunk_num += 1;
+  }
+  //uint16_t count;
+
+  for (uint16_t i = 0; i < total_chunk_num - 1; ++i) {
+    struct chunk_header hdr = {1, 0, total_chunk_num, (uint16_t)(i+1), CHUNK_LEN};
+    send_chunk(snd_buffer, hdr, buf + (i * snd_buf_len), CHUNK_LEN);
+   //memcpy(snd_buffer, buf + (i * buf_len), buf_len);
+    //udp.write(snd_buffer, chunk_len);
   }
 
   if (rest) {
-    memcpy(buffer, buf + (len - rest), rest);
-    udp.write(buffer, rest);
-    count += 1;
+    struct chunk_header hdr = {1, 0, total_chunk_num, total_chunk_num, rest};
+    send_chunk(snd_buffer, hdr, buf + (frame_len - rest), rest);
+    //memcpy(snd_buffer, buf + (frame_len - rest), rest);
+    //udp.write(snd_buffer, rest);
   }
+}
 
-  Serial.print("send total ");
-  Serial.print(count);
-  Serial.println(" UDP packet");
+/*
+insert header into the message.
+*/
+void send_chunk(uint8_t * buffer, struct chunk_header &hdr, const uint8_t * msg_buffer, size_t msg_len){
+  // Insert header to the beginning of the send buffer.
+  memcpy(buffer, &hdr, sizeof(hdr));
+  // Copy the message data after the header
+  memcpy(buffer + sizeof(hdr), msg_buffer, msg_len);
+  udp.write(buffer, HEADER_LEN + msg_len);  
 }

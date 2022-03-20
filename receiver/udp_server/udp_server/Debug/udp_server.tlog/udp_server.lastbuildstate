@@ -1,0 +1,2 @@
+#TargetFrameworkVersion=v4.0:PlatformToolSet=v141:EnableManagedIncrementalBuild=false:VCToolArchitecture=Native32Bit:WindowsTargetPlatformVersion=10.0.15063.0
+Debug|Win32|F:\谭啸楚学习资料\单片机项目\图传遥控小车\github_code\Cam-Pic-TX\receiver\udp_server\|

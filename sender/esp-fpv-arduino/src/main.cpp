@@ -62,15 +62,7 @@ void setup() {
   Serial.println("got camera frame");
   // Get the data buffer
   const uint8_t *data = fb->buf;
-  // for test.
-  /*
-  uint8_t t_data[5000];
-  for (int i = 0; i < 5000; i++){
-    t_data[i] = (uint8_t)(i % 200);
-  }
- 
-  const uint8_t *text_data = t_data;
-  */
+
   // Set chunk length 1400, max.1436. For UDP payload
   const uint16_t pld_len = PAYLOAD_SIZE;
   //TODO: pack header for each udp payload.
@@ -80,11 +72,25 @@ void setup() {
   send_frame(data, fb->len, pld_len);
   //send_frame(text_data, 5000, pld_len);
   Serial.println("already send");
+  esp_camera_fb_return(fb);
+  delay(100);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  delay(10000);
+  //delay(10000);
+  camera_fb_t * fb = get_frame();
+  // Get the data buffer
+  const uint8_t *data = fb->buf;
+  // Set chunk length 1400, max.1436. For UDP payload
+  const uint16_t pld_len = PAYLOAD_SIZE;
+  // Send the entire frame data. Of course it should be fragmented to fit the UDP payload size.
+  send_frame(data, fb->len, pld_len);
+  //send_frame(text_data, 5000, pld_len);
+ // Serial.println("already send");
+  esp_camera_fb_return(fb);
+
+  //delay(20);
 }
 
 void init_camera(){
@@ -177,10 +183,10 @@ camera_fb_t * get_frame(){
         Serial.println(ESP_FAIL);
     }
 
-  Serial.println(fb->width);
-  Serial.println(fb->height);
-  Serial.println(fb->format);
-  Serial.println(fb->len);
+  //Serial.println(fb->width);
+  //Serial.println(fb->height);
+  //Serial.println(fb->format);
+  //Serial.println(fb->len);
   return fb;
 }
 

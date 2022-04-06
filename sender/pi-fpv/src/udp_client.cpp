@@ -32,6 +32,7 @@ void error(char *msg)
 	perror(msg);
 	exit(EXIT_FAILURE);
 }
+
 int main()
 {
 	int sockfd;

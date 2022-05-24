@@ -8,6 +8,8 @@
 #include<stdlib.h>
 
 #include "packet_handler.h"
+#include "v4l2_capture.h"
+#include <cstdio>
 
 using namespace std;
 
@@ -54,9 +56,20 @@ int main()
 	//recvfrom(sockfd, buffer, 256, 0, (struct sockaddr *)&client, &l);
 
 
-	const int data_len = 5000;
-	uint8_t data[data_len];
-	memset(data, 1, data_len);
+        CameraController cam = CameraController();
+	printf("start\n");
+    	cam.open_device();
+	printf("open\n");
+	cam.init_device();
+	printf("init\n");
+	cam.start_capturing();
+	printf("start2\n");
+	 
+
+
+	//const int data_len = 5000;
+	//uint8_t data[data_len];
+	//memset(data, 1, data_len);
 
 	// Set chunk length 1400, max.1436. For UDP payload
 	const uint16_t pld_len = PAYLOAD_SIZE;
@@ -64,10 +77,27 @@ int main()
 
 	send_init_udp(sockfd, serv, m);
 
-	for (int i = 0; i < 10; i++) {
-		send_frame(data, data_len, pld_len, sockfd, serv, m);
-		sleep(2);
+	for (int i = 0; i < 1000; i++) {
+		clock_t st = clock();
+                cam.capture_frame();
+		clock_t end1 = clock();
+		//printf("capture time: %f\n", (double)((end1 - st)*1000 / CLOCKS_PER_SEC));
+                //printf("capture\n");
+ 
+		send_frame((uint8_t*)cam.buffers[0].start, cam.buffers[0].length, pld_len, sockfd, serv, m);
+		//sleep(2);
+		clock_t end2 = clock();
+		//printf("transmission time for one frame: %fms\n", (double)(end2-st)*1000/CLOCKS_PER_SEC);
 	}
+
+	cam.stop_capturing();
+    	printf("stop\n");
+    	cam.uninit_device();
+    	printf("uninit\n");
+    	cam.close_device();
+    	printf("close\n");
+
+
 
 }
 
@@ -78,7 +108,7 @@ void send_init_udp(int sockfd, struct sockaddr_in & serv, socklen_t m) {
 	for (uint16_t i = 0; i< 5; i++) {
 		struct chunk_header hdr = { 0, 0, 5, (uint16_t)(i + 1), sizeof(msg) };
 		send_chunk(buffer, hdr, msg, sizeof(msg), sockfd, serv, m);
-		printf("sent udp packet");
+		printf("sent udp packet\n");
 		sleep(2);
 	}
 }

@@ -1,0 +1,11 @@
+1. Modify Makefile to adapt separate include and source folders.
+2. write interfaces:
+        - udp_client
+        - udp_server
+        - camera_module
+3. implement interface:
+        - udp_client
+        - udp_server
+        - camera_module
+4. implement sender.cpp as new main file.
+5. implement latency test. (test_helper class and test_main file)

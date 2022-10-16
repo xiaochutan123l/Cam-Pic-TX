@@ -15,15 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="udp_server.cpp">
+    <ClCompile Include="packet_handler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="packet_handler.cpp">
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="udp_receiver_win.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="packet_handler.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="udp_receiver_win.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -56,9 +56,9 @@ int main()
 	//recvfrom(sockfd, buffer, 256, 0, (struct sockaddr *)&client, &l);
 
 
-        CameraController cam = CameraController();
+    CameraController cam = CameraController();
 	printf("start\n");
-    	cam.open_device();
+    cam.open_device();
 	printf("open\n");
 	cam.init_device();
 	printf("init\n");

@@ -1,19 +1,24 @@
 ### commend.
 
 target = udp_sender
-
+dir = ./src
 cc = g++
 
-objects = ./src/udp_client.cpp packet_handler.o v4l2_capture.o
+build_dir = ./build
+
+objects = $(dir)/udp_client.cpp packet_handler.o v4l2_capture.o
+offline_test_objects = $(dir)/stream_cap_test.cpp $(dir)/cam_controller_impl.cpp $(dir)/v4l2_capture.c
+#test_objects = $(dir)/stream_cap_test.cpp packet_handler.o v4l2_capture.o
 
 $(target) : $(objects)
 	$(cc) -o $(target) $(objects)
 
-packet_handler.o : ./src/packet_handler.cpp
-	$(cc) -c ./src/packet_handler.cpp
-
-v4l2_capture.o : ./src/v4l2_capture.cpp
-	$(cc) -c ./src/v4l2_capture.cpp
+offline_test: $(offline_test_objects)
+	$(cc) -o $(build_dir)/offline_test $(offline_test_objects)
 
 clean:
-	rm ./packet_handler.o ./v4l2_capture.o $(target)
+	rm $(build_dir)/*
+
+#test: 
+
+	

@@ -52,7 +52,7 @@ void process_image(const void *p, int size)
         //if (out_buf){
 	//uint8_t *new_buffer = (uint8_t*)malloc(size);
 	//memcpy(new_buffer, p, size);
-	FILE *out_fp = fopen("./test.jpg","w");
+	FILE *out_fp = fopen("./test.yuv","w");
 	
 	if(out_fp==NULL) {
 		printf("File cannot be opened\n");
@@ -99,6 +99,7 @@ void capture_frame(int count)
 {
         while (count-- > 0) {
                 for (;;) {
+                        printf("capture frame loop \n");
                         fd_set fds;
                         struct timeval tv;
                         int r;
@@ -260,7 +261,7 @@ void uninit_device()
         free(buffers);
 }
 
-void set_format() {
+void set_format(struct v4l2_pix_format &set_fmt) {
         // 设置图像格式
         struct v4l2_format fmt;
         unsigned int min;
@@ -268,12 +269,14 @@ void set_format() {
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         bool force_format = true;
         if (force_format) {
-                fmt.fmt.pix.width       = 640;
-                fmt.fmt.pix.height      = 480;
+                fmt.fmt.pix.width       = set_fmt.width;
+                fmt.fmt.pix.height      = set_fmt.height;
                 
 		//fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-                fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_JPEG;
-		fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+                //fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_JPEG;
+		//fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+                fmt.fmt.pix.pixelformat = set_fmt.pixelformat;
+		fmt.fmt.pix.field       = set_fmt.field;
                 // set format.
                 if (-1 == ioctl(fd, VIDIOC_S_FMT, &fmt))
                         errno_exit("VIDIOC_S_FMT");

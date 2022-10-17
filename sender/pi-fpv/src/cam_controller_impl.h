@@ -9,7 +9,7 @@ public:
     Cam_Controller_Impl(Stream_fmt fmt);
     
     void start() override;
-    void capture_frame(int count) override;
+    void get_frame(int count) override;
     void stop() override;
     void close() override;
 
@@ -17,4 +17,7 @@ public:
     //Stream_fmt* getFMT() override;
 
     ~Cam_Controller_Impl();
+
+private:
+    void _set_format();
 };

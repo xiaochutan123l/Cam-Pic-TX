@@ -21,7 +21,25 @@ enum class IMAGE_FMT {
 	YUV420,
 	// and more.
 };
+/*
+ioctl: VIDIOC_ENUM_FMT
+        Type: Video Capture
 
+        [0]: 'YU12' (Planar YUV 4:2:0)
+        [1]: 'YUYV' (YUYV 4:2:2)
+        [2]: 'RGB3' (24-bit RGB 8-8-8)
+        [3]: 'JPEG' (JFIF JPEG, compressed)
+        [4]: 'H264' (H.264, compressed)
+        [5]: 'MJPG' (Motion-JPEG, compressed)
+        [6]: 'YVYU' (YVYU 4:2:2)
+        [7]: 'VYUY' (VYUY 4:2:2)
+        [8]: 'UYVY' (UYVY 4:2:2)
+        [9]: 'NV12' (Y/CbCr 4:2:0)
+        [10]: 'BGR3' (24-bit BGR 8-8-8)
+        [11]: 'YV12' (Planar YVU 4:2:0)
+        [12]: 'NV21' (Y/CrCb 4:2:0)
+        [13]: 'RX24' (32-bit XBGR 8-8-8-8)
+*/
 enum class RESOLUTION_FMT {
 	// 320x240
 	R_240,

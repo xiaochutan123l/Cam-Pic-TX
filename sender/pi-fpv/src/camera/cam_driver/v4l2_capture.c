@@ -21,10 +21,10 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
-#include <linux/videodev2.h>
+//#include <linux/videodev2.h>
 #include "v4l2_capture.h"
 //#include <time.h>
-#include <cstddef>
+//#include <cstddef>
 #include <stdint.h>
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
@@ -36,7 +36,7 @@ struct buffer {
 
 static char             *dev_name;
 static int              fd;
-static buffer           *buffers;
+static struct buffer           *buffers;
 static unsigned int     n_buffers;
 
 void errno_exit(const char *s)
@@ -188,7 +188,7 @@ void init_mmap()
                 exit(EXIT_FAILURE);
         }
 
-        buffers = (buffer*)calloc(req.count, sizeof(buffer));
+        buffers = (struct buffer*)calloc(req.count, sizeof(struct buffer));
 
         if (!buffers) {
                 fprintf(stderr, "Out of memory\n");
@@ -261,22 +261,22 @@ void uninit_device()
         free(buffers);
 }
 
-void set_format(struct v4l2_pix_format &set_fmt) {
+void set_format(struct v4l2_pix_format *set_fmt) {
         // 设置图像格式
         struct v4l2_format fmt;
         unsigned int min;
         CLEAR(fmt);
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        bool force_format = true;
-        if (force_format) {
-                fmt.fmt.pix.width       = set_fmt.width;
-                fmt.fmt.pix.height      = set_fmt.height;
+        // TODO: remove this if loop.
+        if (1) {
+                fmt.fmt.pix.width       = set_fmt->width;
+                fmt.fmt.pix.height      = set_fmt->height;
                 
 		//fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
                 //fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_JPEG;
 		//fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
-                fmt.fmt.pix.pixelformat = set_fmt.pixelformat;
-		fmt.fmt.pix.field       = set_fmt.field;
+                fmt.fmt.pix.pixelformat = set_fmt->pixelformat;
+		fmt.fmt.pix.field       = set_fmt->field;
                 // set format.
                 if (-1 == ioctl(fd, VIDIOC_S_FMT, &fmt))
                         errno_exit("VIDIOC_S_FMT");

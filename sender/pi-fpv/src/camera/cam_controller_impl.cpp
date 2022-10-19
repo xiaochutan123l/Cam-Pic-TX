@@ -1,10 +1,7 @@
 #include "cam_controller_impl.h"
 #include <iostream>
 
-extern "C" {
-    #include "v4l2_capture.h"
-    #include <linux/videodev2.h>
-}
+#include "v4l2_capture.h"
 
 Cam_Controller_Impl::Cam_Controller_Impl(Stream_fmt fmt, char *dev_name)
     : Cam_Controller(fmt, dev_name) {
@@ -56,7 +53,7 @@ void Cam_Controller_Impl::_set_format() {
     //set_fmt.pixelformat = V4L2_PIX_FMT_YUV420;
     set_fmt.pixelformat = V4L2_PIX_FMT_YUYV;
     set_fmt.field = V4L2_FIELD_INTERLACED;
-    set_format(set_fmt);
+    set_format(&set_fmt);
 }
 
 void Cam_Controller_Impl::get_frame(int count) {

@@ -9,7 +9,7 @@ public:
     Cam_Controller_Impl(Stream_fmt fmt);
     
     void start() override;
-    void get_frame(int count) override;
+    void get_frame() override;
     void stop() override;
     void close() override;
 
@@ -20,5 +20,6 @@ public:
 
 private:
     void _set_frame_format();
-    uint32_t _set_frame_rate();
+    int _set_frame_rate();
+    int buffer_size;
 };

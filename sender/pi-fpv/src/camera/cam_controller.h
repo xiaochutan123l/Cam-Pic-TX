@@ -12,7 +12,7 @@ public:
     // initialize and start camera for capturing.
     virtual void start() = 0;
     // capture a frame.
-    virtual void get_frame(int count) = 0;
+    virtual void get_frame() = 0;
     virtual void reset_format(Stream_fmt fmt) = 0;
 
     virtual void stop() = 0;

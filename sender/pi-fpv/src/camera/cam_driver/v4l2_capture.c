@@ -25,18 +25,13 @@
 #include "v4l2_capture.h"
 //#include <time.h>
 //#include <cstddef>
-#include <stdint.h>
+//#include <stdint.h>
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
-struct buffer {
-        void   *start;
-        size_t  length;
-};
-
 static char             *dev_name;
 static int              fd;
-static struct buffer           *buffers;
+static struct buffer    *buffers;
 static unsigned int     n_buffers;
 
 void errno_exit(const char *s)
@@ -45,6 +40,7 @@ void errno_exit(const char *s)
         exit(EXIT_FAILURE);
 }
 
+/*
 void process_image(const void *p, int size)
 {	
 	//fwrite(p, size, 1, stdout);
@@ -53,7 +49,6 @@ void process_image(const void *p, int size)
 	//uint8_t *new_buffer = (uint8_t*)malloc(size);
 	//memcpy(new_buffer, p, size);
 	FILE *out_fp = fopen("./test.yuv","w");
-	
 	if(out_fp==NULL) {
 		printf("File cannot be opened\n");
 		exit(EXIT_FAILURE);
@@ -66,68 +61,75 @@ void process_image(const void *p, int size)
 
 	}
 	//fwrite(p, size, 1, out_fp);
-
 	fclose(out_fp);
 	//}
-
         //fflush(stderr);
         //fflush(stdout);
 }
+*/
 
-int read_frame()
+int read_frame(struct v4l2_buffer *v_buf, struct buffer *buf)
 {
-        struct v4l2_buffer buf;
-        CLEAR(buf);
-
-        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        buf.memory = V4L2_MEMORY_MMAP;
+        // 在 driver 内部管理着两个 buffer queues ，一个输入队列，一个输出队列。
+        // 对于 capture device 来说，当输入队列中的 buffer被塞满数据以后会自动变为输出队列，
+        // 等待调用 VIDIOC_DQBUF(从队列中取出帧) 将数据进行处理以后重新调用 VIDIOC_QBUF (把帧放入队列)将 buffer 重新放进输入队列.
+        // ！！！ 在一个buf从出列队中取出，在再次放回去之前内容不会被覆盖，不用担心driver和程序同时写入和读取同一个buffer问题。
+        // ！！！ 所以必须保证处理buffer的时间足够快，在输入队列空之前将使用完的buffer重新入列，不然就会导致丢失图像帧。
+        
         /* 从视频采集输入队列取出帧缓冲区 */
-        if (-1 == ioctl(fd, VIDIOC_DQBUF, &buf)) {
+        if (-1 == ioctl(fd, VIDIOC_DQBUF, v_buf)) {
                 fprintf(stderr, "Fail to ioctl 'VIDIOC_DQBUF'\n");
                 errno_exit("VIDIOC_DQBUF");
         }
-        assert(buf.index < n_buffers);
-        process_image(buffers[buf.index].start, buf.bytesused);
-        /* 把用用完的缓冲帧放回队列 */
-        if (-1 == ioctl(fd, VIDIOC_QBUF, &buf))
-                errno_exit("VIDIOC_QBUF");
-
+        assert(v_buf->index < n_buffers);
+        //process_image(buffers[v_buf->index].start, buf->bytesused);
+        buf->start = buffers[v_buf->index].start,
+        buf->length = v_buf->bytesused;
         return 1;
 }
 
-void capture_frame(int count)
+void release_frame_buffer(struct v4l2_buffer *v_buf) {
+        /* 把用用完的缓冲帧放回队列 */
+        if (-1 == ioctl(fd, VIDIOC_QBUF, v_buf))
+                errno_exit("VIDIOC_QBUF");
+}
+
+/*
+v_buf: v4l2_buffer
+buf: frame buffer
+*/
+// capture a single frame each time.
+void capture_frame(struct v4l2_buffer *v_buf, struct buffer *buf)
 {
-        while (count-- > 0) {
-                for (;;) {
-                        printf("capture frame loop \n");
-                        fd_set fds;
-                        struct timeval tv;
-                        int r;
-                        // 将指定的文件描述符集清空
-                        FD_ZERO(&fds);
-                        // 在文件描述符集合中增加一个新的文件描述符
-                        FD_SET(fd, &fds);
+        CLEAR(*v_buf);
+        v_buf->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        v_buf->memory = V4L2_MEMORY_MMAP;
+        for (;;) {
+                fd_set fds;
+                struct timeval tv;
+                int r;
+                // 将指定的文件描述符集清空
+                FD_ZERO(&fds);
+                // 在文件描述符集合中增加一个新的文件描述符
+                FD_SET(fd, &fds);
 
-                        /* Timeout. */
-                        tv.tv_sec = 2;
-                        tv.tv_usec = 0;
-                        // 判断是否可读(即摄像头是否准备好)，tv是定时
-                        r = select(fd + 1, &fds, NULL, NULL, &tv);
-
-                        if (-1 == r) {
-                                if (EINTR == errno)
-                                        continue;
-                                errno_exit("select");
-                        }
-
-                        if (0 == r) {
-                                fprintf(stderr, "select timeout\n");
-                                exit(EXIT_FAILURE);
-                        }
-			if (read_frame())
-                                break;
-                        /* EAGAIN - continue select loop. */
+                /* Timeout. */
+                tv.tv_sec = 2;
+                tv.tv_usec = 0;
+                // 判断是否可读(即摄像头是否准备好)，tv是定时
+                r = select(fd + 1, &fds, NULL, NULL, &tv);
+                if (-1 == r) {
+                        if (EINTR == errno)
+                                continue;
+                        errno_exit("select");
                 }
+                if (0 == r) {
+                        fprintf(stderr, "select timeout\n");
+                        exit(EXIT_FAILURE);
+                }
+                if (read_frame(v_buf, buf))
+                        break;
+                /* EAGAIN - continue select loop. */
         }
 }
 
@@ -162,13 +164,11 @@ void start_capturing()
                 errno_exit("VIDIOC_STREAMON");
 }
 
-void init_mmap()
+void init_mmap(int buffer_num)
 {
         struct v4l2_requestbuffers req;
-
         CLEAR(req);
-
-        req.count = 4;
+        req.count = buffer_num;
         req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         req.memory = V4L2_MEMORY_MMAP;
         // 请求缓冲区
@@ -197,9 +197,7 @@ void init_mmap()
 
         for (n_buffers = 0; n_buffers < req.count; ++n_buffers) {
                 struct v4l2_buffer buf;
-
                 CLEAR(buf);
-
                 buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 buf.memory      = V4L2_MEMORY_MMAP;
                 buf.index       = n_buffers;
@@ -214,7 +212,6 @@ void init_mmap()
                               PROT_READ | PROT_WRITE /* required */,
                               MAP_SHARED /* recommended */,
                               fd, buf.m.offset);
-
                 if (MAP_FAILED == buffers[n_buffers].start)
                         errno_exit("mmap");
         }

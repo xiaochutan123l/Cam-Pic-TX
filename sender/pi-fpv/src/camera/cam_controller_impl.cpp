@@ -6,12 +6,14 @@
 Cam_Controller_Impl::Cam_Controller_Impl(Stream_fmt fmt, char *dev_name)
     : Cam_Controller(fmt, dev_name) {
     m_status = CAM_STATUS::IDLE;
+    buffer_size = 4;
 }
 
 Cam_Controller_Impl::Cam_Controller_Impl(Stream_fmt fmt)
     : Cam_Controller(fmt){
     m_status = CAM_STATUS::IDLE;
     m_dev_name = nullptr;
+    buffer_size = 4;
 }
 
 void Cam_Controller_Impl::start() {
@@ -21,7 +23,7 @@ void Cam_Controller_Impl::start() {
     // TODO: add determination here for the set result.ß
     _set_frame_format();
     _set_frame_rate();
-    init_mmap();
+    init_mmap(buffer_size);
     m_status = CAM_STATUS::INIT;
     start_capturing();
     m_status = CAM_STATUS::STARTED;
@@ -58,7 +60,7 @@ void Cam_Controller_Impl::_set_frame_format() {
     set_frame_format(&set_fmt);
 }
 
-uint32_t Cam_Controller_Impl::_set_frame_rate() {
+int Cam_Controller_Impl::_set_frame_rate() {
     struct v4l2_fract f_rate;
     f_rate.numerator = 1;
     if (m_fmt.frame_rate < 1)
@@ -70,9 +72,13 @@ uint32_t Cam_Controller_Impl::_set_frame_rate() {
     return f_rate.denominator;
 }
 
-void Cam_Controller_Impl::get_frame(int count) {
+void Cam_Controller_Impl::get_frame() {
     printf("cpp capture frame\n");
-    capture_frame(count);
+    struct v4l2_buffer v_buf;
+    struct buffer buf;
+    capture_frame(&v_buf, &buf);
+    // TODO: do something, handle this frame.
+    release_frame_buffer(&v_buf);
 }
 
 void Cam_Controller_Impl::stop() {
@@ -105,7 +111,7 @@ void Cam_Controller_Impl::reset_format(Stream_fmt fmt) {
     // TODO: determine if the framerate was set to the desired value.
     _set_frame_rate();
     // TODO: test if the following two steps are neccesary.
-    init_mmap();
+    init_mmap(buffer_size);
     start_capturing();
 }
 

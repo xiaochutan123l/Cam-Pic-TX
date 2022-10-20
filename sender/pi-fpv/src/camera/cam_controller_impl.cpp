@@ -18,14 +18,16 @@ void Cam_Controller_Impl::start() {
     open_device(m_dev_name);
     m_status = CAM_STATUS::IDLE;
     init_device();
-    _set_format();
+    // TODO: add determination here for the set result.ß
+    _set_frame_format();
+    _set_frame_rate();
     init_mmap();
     m_status = CAM_STATUS::INIT;
     start_capturing();
     m_status = CAM_STATUS::STARTED;
 }
 
-void Cam_Controller_Impl::_set_format() {
+void Cam_Controller_Impl::_set_frame_format() {
     struct v4l2_pix_format set_fmt;
     switch(m_fmt.res_fmt){
         case RESOLUTION_FMT::R_240:
@@ -53,7 +55,19 @@ void Cam_Controller_Impl::_set_format() {
     //set_fmt.pixelformat = V4L2_PIX_FMT_YUV420;
     set_fmt.pixelformat = V4L2_PIX_FMT_YUYV;
     set_fmt.field = V4L2_FIELD_INTERLACED;
-    set_format(&set_fmt);
+    set_frame_format(&set_fmt);
+}
+
+uint32_t Cam_Controller_Impl::_set_frame_rate() {
+    struct v4l2_fract f_rate;
+    f_rate.numerator = 1;
+    if (m_fmt.frame_rate < 1)
+        m_fmt.frame_rate = 1;
+    f_rate.denominator = m_fmt.frame_rate;
+
+    set_frame_rate(&f_rate);
+
+    return f_rate.denominator;
 }
 
 void Cam_Controller_Impl::get_frame(int count) {
@@ -86,7 +100,10 @@ void Cam_Controller_Impl::close() {
 }
 
 void Cam_Controller_Impl::reset_format(Stream_fmt fmt) {
-    _set_format();
+    // TODO: determine if the frame format was set to the desired value.
+    _set_frame_format();
+    // TODO: determine if the framerate was set to the desired value.
+    _set_frame_rate();
     // TODO: test if the following two steps are neccesary.
     init_mmap();
     start_capturing();

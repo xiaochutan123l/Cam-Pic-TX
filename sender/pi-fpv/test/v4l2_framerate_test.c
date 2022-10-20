@@ -21,8 +21,8 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
-//#include <linux/videodev2.h>
-#include "v4l2_capture.h"
+#include <linux/videodev2.h>
+//#include "v4l2_capture.h"
 //#include <time.h>
 //#include <cstddef>
 #include <stdint.h>
@@ -36,7 +36,7 @@ struct buffer {
 
 static char             *dev_name;
 static int              fd;
-static struct buffer           *buffers;
+static struct buffer    *buffers;
 static unsigned int     n_buffers;
 
 void errno_exit(const char *s)
@@ -261,32 +261,29 @@ void uninit_device()
         free(buffers);
 }
 
-struct v4l2_pix_format* set_frame_format(struct v4l2_pix_format *set_fmt) {
+void set_format(struct v4l2_pix_format *set_fmt) {
         // 设置图像格式
         struct v4l2_format fmt;
         unsigned int min;
         CLEAR(fmt);
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        
+        // TODO: remove this if loop.
         fmt.fmt.pix.width       = set_fmt->width;
         fmt.fmt.pix.height      = set_fmt->height;
         fmt.fmt.pix.pixelformat = set_fmt->pixelformat;
-        fmt.fmt.pix.field       = set_fmt->field;
+		fmt.fmt.pix.field       = set_fmt->field;
+        printf("trying to set frame format: width: %d, height: %d\n", fmt.fmt.pix.width, fmt.fmt.pix.height);
         // set format.
         if (-1 == ioctl(fd, VIDIOC_S_FMT, &fmt))
                 errno_exit("VIDIOC_S_FMT");
-
-        /* Note VIDIOC_S_FMT may change width and height. */
-        /* Preserve original settings as set by v4l2-ctl for example */
         if (-1 == ioctl(fd, VIDIOC_G_FMT, &fmt))
                 errno_exit("VIDIOC_G_FMT");
 
-        set_fmt->width = fmt.fmt.pix.width;
-        set_fmt->height = fmt.fmt.pix.height;
+        printf("frame format set: width: %d, height: %d\n", fmt.fmt.pix.width, fmt.fmt.pix.height);
         
 }
 
-struct v4l2_fract* set_frame_rate(struct v4l2_fract *s_parm) {
+void set_s_param(struct v4l2_fract *s_parm) {
         // 设置图像格式
         struct v4l2_streamparm streamparm;
         CLEAR(streamparm);
@@ -297,19 +294,18 @@ struct v4l2_fract* set_frame_rate(struct v4l2_fract *s_parm) {
         streamparm.parm.capture.capturemode |= V4L2_CAP_TIMEPERFRAME;
         streamparm.parm.capture.timeperframe.numerator = s_parm->numerator;
         streamparm.parm.capture.timeperframe.denominator = s_parm->denominator;
+        printf("trying to set stream param: framerate: %d/%d\n", streamparm.parm.capture.timeperframe.numerator, streamparm.parm.capture.timeperframe.denominator);
         // set format.
         // VIDIOC_G_PARM : G -> get , S -> set.
         if (-1 == ioctl(fd, VIDIOC_S_PARM, &streamparm)){
             errno_exit("VIDIOC_S_PARM");
         } 
+        /* Preserve original settings as set by v4l2-ctl for example */
         if (-1 == ioctl(fd, VIDIOC_G_PARM, &streamparm)) {
                 errno_exit("VIDIOC_G_PARM");
         }
-
-        s_parm->numerator = streamparm.parm.capture.timeperframe.numerator;
-        s_parm->denominator = streamparm.parm.capture.timeperframe.denominator;
-        // return the new s_parm, because it may be not the same as the desired one.
-        return s_parm;
+        printf("set stream param succed!\n");
+        printf("new stream param: framerate: %d/%d\n", streamparm.parm.capture.timeperframe.numerator, streamparm.parm.capture.timeperframe.denominator);
 }
 
 void close_device()
@@ -342,4 +338,29 @@ void open_device(char *dev_name)
                                 dev_name, errno, strerror(errno));
                 exit(EXIT_FAILURE);
         }
+}
+
+int main() {
+    dev_name = (char*)"/dev/video0";
+    open_device(dev_name);
+    init_device();
+
+    struct v4l2_pix_format set_fmt;
+    set_fmt.width = 320;
+    set_fmt.height = 240;
+    
+    //set_fmt.pixelformat = V4L2_PIX_FMT_YUV420;
+    set_fmt.pixelformat = V4L2_PIX_FMT_YUYV;
+    set_fmt.field = V4L2_FIELD_INTERLACED;
+    set_format(&set_fmt);
+
+
+    struct v4l2_fract sparm;
+    sparm.numerator = 1;
+    sparm.denominator = 2;
+
+    set_s_param(&sparm);
+
+    close_device();
+    return 1;
 }

@@ -19,5 +19,6 @@ public:
     ~Cam_Controller_Impl();
 
 private:
-    void _set_format();
+    void _set_frame_format();
+    uint32_t _set_frame_rate();
 };

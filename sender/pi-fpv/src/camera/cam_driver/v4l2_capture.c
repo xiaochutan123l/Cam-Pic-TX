@@ -261,7 +261,7 @@ void uninit_device()
         free(buffers);
 }
 
-struct v4l2_pix_format* set_frame_format(struct v4l2_pix_format *set_fmt) {
+void set_frame_format(struct v4l2_pix_format *set_fmt) {
         // 设置图像格式
         struct v4l2_format fmt;
         unsigned int min;
@@ -281,12 +281,14 @@ struct v4l2_pix_format* set_frame_format(struct v4l2_pix_format *set_fmt) {
         if (-1 == ioctl(fd, VIDIOC_G_FMT, &fmt))
                 errno_exit("VIDIOC_G_FMT");
 
+        // That should allow setting the capture-side frame rate. 
+        // It's your task to make sure you're reading fast enough not to get frame drops.
         set_fmt->width = fmt.fmt.pix.width;
         set_fmt->height = fmt.fmt.pix.height;
         
 }
 
-struct v4l2_fract* set_frame_rate(struct v4l2_fract *s_parm) {
+void set_frame_rate(struct v4l2_fract *s_parm) {
         // 设置图像格式
         struct v4l2_streamparm streamparm;
         CLEAR(streamparm);
@@ -308,8 +310,6 @@ struct v4l2_fract* set_frame_rate(struct v4l2_fract *s_parm) {
 
         s_parm->numerator = streamparm.parm.capture.timeperframe.numerator;
         s_parm->denominator = streamparm.parm.capture.timeperframe.denominator;
-        // return the new s_parm, because it may be not the same as the desired one.
-        return s_parm;
 }
 
 void close_device()

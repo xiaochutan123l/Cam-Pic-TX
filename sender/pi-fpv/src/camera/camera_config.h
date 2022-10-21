@@ -74,4 +74,7 @@ enum class CAM_STATUS {
 	CLOSED,
 };
 
+// handler function for interface side.
+typedef void (*frame_handler_cb_i)(void *start, uint32_t length);
+
 #endif /*_CAMERA_CONFIG_H_*/

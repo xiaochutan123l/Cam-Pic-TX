@@ -1,8 +1,6 @@
 #include "cam_controller_impl.h"
 #include <iostream>
 
-#include "v4l2_capture.h"
-
 Cam_Controller_Impl::Cam_Controller_Impl(Stream_fmt fmt, char *dev_name)
     : Cam_Controller(fmt, dev_name) {
     m_status = CAM_STATUS::IDLE;
@@ -20,11 +18,28 @@ void Cam_Controller_Impl::start() {
     open_device(m_dev_name);
     m_status = CAM_STATUS::IDLE;
     init_device();
-    // TODO: add determination here for the set result.ß
+    // TODO: add determination here for the set result.
     _set_frame_format();
     _set_frame_rate();
     init_mmap(buffer_size);
     m_status = CAM_STATUS::INIT;
+    start_capturing();
+    m_status = CAM_STATUS::STARTED;
+}
+
+// start camera with handler function callback.
+void Cam_Controller_Impl::start(frame_handler_cb_i cb_i) {
+    open_device(m_dev_name);
+    m_status = CAM_STATUS::IDLE;
+    init_device();
+    // TODO: add determination here for the set result.
+    _set_frame_format();
+    _set_frame_rate();
+    init_mmap(buffer_size);
+    m_status = CAM_STATUS::INIT;
+
+    register_frame_handler_cb(cb_i);
+
     start_capturing();
     m_status = CAM_STATUS::STARTED;
 }
@@ -55,7 +70,8 @@ void Cam_Controller_Impl::_set_frame_format() {
     }
     
     //set_fmt.pixelformat = V4L2_PIX_FMT_YUV420;
-    set_fmt.pixelformat = V4L2_PIX_FMT_YUYV;
+    //set_fmt.pixelformat = V4L2_PIX_FMT_YUYV;
+    set_fmt.pixelformat = V4L2_PIX_FMT_JPEG;
     set_fmt.field = V4L2_FIELD_INTERLACED;
     set_frame_format(&set_fmt);
 }
@@ -73,12 +89,7 @@ int Cam_Controller_Impl::_set_frame_rate() {
 }
 
 void Cam_Controller_Impl::get_frame() {
-    printf("cpp capture frame\n");
-    struct v4l2_buffer v_buf;
-    struct buffer buf;
-    capture_frame(&v_buf, &buf);
-    // TODO: do something, handle this frame.
-    release_frame_buffer(&v_buf);
+    capture_frame();
 }
 
 void Cam_Controller_Impl::stop() {

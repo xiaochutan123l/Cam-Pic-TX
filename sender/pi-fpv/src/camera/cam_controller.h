@@ -11,6 +11,7 @@ public:
     Cam_Controller(Stream_fmt fmt):m_fmt(fmt){};
     // initialize and start camera for capturing.
     virtual void start() = 0;
+    virtual void start(frame_handler_cb_i cb_i) = 0;
     // capture a frame.
     virtual void get_frame() = 0;
     virtual void reset_format(Stream_fmt fmt) = 0;

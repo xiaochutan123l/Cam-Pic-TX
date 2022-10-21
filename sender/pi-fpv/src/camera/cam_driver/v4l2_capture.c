@@ -33,6 +33,8 @@ static char             *dev_name;
 static int              fd;
 static struct buffer    *buffers;
 static unsigned int     n_buffers;
+static frame_handler_cb handler_callback;
+
 
 void errno_exit(const char *s)
 {
@@ -68,30 +70,34 @@ void process_image(const void *p, int size)
 }
 */
 
-int read_frame(struct v4l2_buffer *v_buf, struct buffer *buf)
+int read_frame()
 {
         // 在 driver 内部管理着两个 buffer queues ，一个输入队列，一个输出队列。
         // 对于 capture device 来说，当输入队列中的 buffer被塞满数据以后会自动变为输出队列，
         // 等待调用 VIDIOC_DQBUF(从队列中取出帧) 将数据进行处理以后重新调用 VIDIOC_QBUF (把帧放入队列)将 buffer 重新放进输入队列.
         // ！！！ 在一个buf从出列队中取出，在再次放回去之前内容不会被覆盖，不用担心driver和程序同时写入和读取同一个buffer问题。
         // ！！！ 所以必须保证处理buffer的时间足够快，在输入队列空之前将使用完的buffer重新入列，不然就会导致丢失图像帧。
-        
+        struct v4l2_buffer buf;
+        CLEAR(buf);
+        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        buf.memory = V4L2_MEMORY_MMAP;
         /* 从视频采集输入队列取出帧缓冲区 */
-        if (-1 == ioctl(fd, VIDIOC_DQBUF, v_buf)) {
+        if (-1 == ioctl(fd, VIDIOC_DQBUF, &buf)) {
                 fprintf(stderr, "Fail to ioctl 'VIDIOC_DQBUF'\n");
                 errno_exit("VIDIOC_DQBUF");
         }
-        assert(v_buf->index < n_buffers);
-        //process_image(buffers[v_buf->index].start, buf->bytesused);
-        buf->start = buffers[v_buf->index].start,
-        buf->length = v_buf->bytesused;
+        assert(buf.index < n_buffers);
+        if (handler_callback)
+                handler_callback(buffers[buf.index].start, buf.bytesused);
+
+        /* 把用用完的缓冲帧放回队列 */
+        if (-1 == ioctl(fd, VIDIOC_QBUF, &buf))
+                errno_exit("VIDIOC_QBUF");
         return 1;
 }
 
-void release_frame_buffer(struct v4l2_buffer *v_buf) {
-        /* 把用用完的缓冲帧放回队列 */
-        if (-1 == ioctl(fd, VIDIOC_QBUF, v_buf))
-                errno_exit("VIDIOC_QBUF");
+void register_frame_handler_cb(frame_handler_cb cb) {
+        handler_callback = cb;
 }
 
 /*
@@ -99,11 +105,8 @@ v_buf: v4l2_buffer
 buf: frame buffer
 */
 // capture a single frame each time.
-void capture_frame(struct v4l2_buffer *v_buf, struct buffer *buf)
+void capture_frame()
 {
-        CLEAR(*v_buf);
-        v_buf->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        v_buf->memory = V4L2_MEMORY_MMAP;
         for (;;) {
                 fd_set fds;
                 struct timeval tv;
@@ -127,7 +130,7 @@ void capture_frame(struct v4l2_buffer *v_buf, struct buffer *buf)
                         fprintf(stderr, "select timeout\n");
                         exit(EXIT_FAILURE);
                 }
-                if (read_frame(v_buf, buf))
+                if (read_frame())
                         break;
                 /* EAGAIN - continue select loop. */
         }

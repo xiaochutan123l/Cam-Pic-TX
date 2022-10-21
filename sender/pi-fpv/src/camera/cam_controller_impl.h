@@ -9,6 +9,7 @@ public:
     Cam_Controller_Impl(Stream_fmt fmt);
     
     void start() override;
+    void start(frame_handler_cb_i cb_i) override;
     void get_frame() override;
     void stop() override;
     void close() override;

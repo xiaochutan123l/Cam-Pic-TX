@@ -8,12 +8,12 @@
 #include<stdlib.h>
 
 #include "packet_handler.h"
-#include "v4l2_capture.h"
 #include <cstdio>
 
 using namespace std;
 
 void send_init_udp(int sockfd, struct sockaddr_in & serv, socklen_t m);
+
 void send_frame(const uint8_t * buf,
 	size_t frame_len,
 	const uint16_t pld_len,
@@ -21,6 +21,7 @@ void send_frame(const uint8_t * buf,
 	struct sockaddr_in & serv,
 	socklen_t m
 );
+
 void send_chunk(uint8_t * buffer,
 	struct chunk_header &hdr,
 	const uint8_t * msg_buffer,

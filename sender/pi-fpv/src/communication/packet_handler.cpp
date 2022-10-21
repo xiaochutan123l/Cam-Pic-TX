@@ -23,3 +23,7 @@ void pack_header(uint8_t * buffer, struct chunk_header &hdr){
     hdr_ptr->chunk_num = hdr.chunk_num;
     hdr_ptr->chunk_len = hdr.chunk_len;
 }
+
+void to_sock_addr(struct address addr) {
+    // TODO
+}

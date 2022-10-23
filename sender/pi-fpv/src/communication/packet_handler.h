@@ -30,7 +30,7 @@ struct chunk_header {
 };
 
 enum class sock_type {
-	UPD,
+	UDP,
 	TCP,
 	RAW_UDP,
 	RAW_TCP,

@@ -4,33 +4,37 @@
 
 class Udp_client : public Sender {
 public:
-    Sender();
-    Sender(struct address addr);
-    Sender(struct address addr, sock_type type);
+    // defualt udp.
+    Udp_client();
+    Udp_client(sock_type type);
 
-    void init() override;
-    void connect(string server_ip, int server_port) override;
+    void connect(struct address &addr);
 
-    void send_frame(const uint8_t * buf, size_t frame_len) override;
+    void send_frame(const uint8_t * frame_buf, size_t frame_len) override;
 
-    void send_frame_to(const uint8_t * buf, size_t frame_len, struct address addr) override;
+    void send_frame_to(const uint8_t * frame_buf, size_t frame_len, struct address &addr) override;
 
-    void send_chunk(uint8_t * buffer, struct chunk_header &hdr) override;
+    void send_packet(uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr) override;
 
-    void send_chunk_to(uint8_t * buffer, struct chunk_header &hdr, struct address addr) override;
+    void void send_packet_to(uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr, struct address &addr) override;
 
-    void reset_addr(struct address new_addr) override;
+    void reset_addr(struct address &new_addr) override;
 
-    // TODO: add asychronous receive and send mechanism.
-    //virtual void register_recv_callback() = 0;
-
+    void reset_payload_len(size_t new_pl_len) override;
 
     ~Udp_client();
 
 private:
     int sockfd;
-	struct sockaddr_in serv, client;
-	socklen_t l_client;
-	socklen_t l_serv;
+	struct sockaddr_in m_serv, m_client;
+	socklen_t m_sock_len_c;
+	socklen_t m_sock_len_s;
+    size_t m_chunk_pl_len;
+    struct address m_addr;
+
+    uint8_t *m_snd_buf;
+
+    void add_dst_addr(struct address &addr);
+    init_udp();
 
 }

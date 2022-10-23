@@ -11,3 +11,5 @@
 5. implement latency test. (test_helper class and test_main file)
 
 --place header or helper files like packet_handler and xxx_config to include folder.
+
+--classify code and add namespace

@@ -44,183 +44,89 @@ using namespace std;
 当然，wifi+udp只是一种传输方案，虽然不考虑TCP-like的协议，但是如同openhd使用的braodcast方式也将会进行实现，由于代码低耦合，不同传输方案和不同设备都可以方便灵活切换。
 */
 Udp_client::Sender() {
-
+	init_udp();
 }
 
-Udp_client::Sender(struct address addr);
-Udp_client::Sender(struct address addr, sock_type type);
-
-void Udp_client::init() override;
-void Udp_client::connect(string server_ip, int server_port) override;
-
-void Udp_client::send_frame(const uint8_t * buf, size_t frame_len) override;
-
-void Udp_client::send_frame_to(const uint8_t * buf, size_t frame_len, struct address addr) override;
-
-void Udp_client::send_chunk(uint8_t * buffer, struct chunk_header &hdr) override;
-
-void Udp_client::send_chunk_to(uint8_t * buffer, struct chunk_header &hdr, struct address addr) override;
-
-void Udp_client::reset_addr(struct address new_addr) override;
-
-// TODO: add asychronous receive and send mechanism.
-//virtual void register_recv_callback() = 0;
-
-
-~Udp_client();
-
-
-
-
-void send_init_udp(int sockfd, struct sockaddr_in & serv, socklen_t m);
-
-void send_frame(const uint8_t * buf,
-	size_t frame_len,
-	const uint16_t pld_len,
-	int sockfd,
-	struct sockaddr_in & serv,
-	socklen_t m
-);
-
-void send_chunk(uint8_t * buffer,
-	struct chunk_header &hdr,
-	const uint8_t * msg_buffer,
-	size_t msg_len, int sockfd,
-	struct sockaddr_in & serv,
-	socklen_t m
-);
-
-void error(char *msg)
-{
-	perror(msg);
-	exit(EXIT_FAILURE);
-}
-
-int main()
-{
-	int sockfd;
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in serv, client;
-
-	serv.sin_family = AF_INET;
-	serv.sin_port = htons(9998);
-	serv.sin_addr.s_addr = inet_addr("192.168.2.104");
-
-	//char buffer[256];
-	socklen_t l = sizeof(client);
-	socklen_t m = sizeof(serv);
-	//socklen_t m = client;
-	cout << "\ngoing to send\n";
-	cout << "\npls enter the mssg to be sent\n";
-	//fgets(buffer, 256, stdin);
-	//sendto(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&serv, m);
-	//recvfrom(sockfd, buffer, 256, 0, (struct sockaddr *)&client, &l);
-
-
-    CameraController cam = CameraController();
-	printf("start\n");
-    cam.open_device();
-	printf("open\n");
-	cam.init_device();
-	printf("init\n");
-	cam.start_capturing();
-	printf("start2\n");
-	 
-
-
-	//const int data_len = 5000;
-	//uint8_t data[data_len];
-	//memset(data, 1, data_len);
-
-	// Set chunk length 1400, max.1436. For UDP payload
-	const uint16_t pld_len = PAYLOAD_SIZE;
-	// Send the entire frame data. Of course it should be fragmented to fit the UDP payload size.
-
-	send_init_udp(sockfd, serv, m);
-
-	for (int i = 0; i < 1000; i++) {
-		clock_t st = clock();
-                cam.capture_frame();
-		clock_t end1 = clock();
-		//printf("capture time: %f\n", (double)((end1 - st)*1000 / CLOCKS_PER_SEC));
-                //printf("capture\n");
- 
-		send_frame((uint8_t*)cam.buffers[0].start, cam.buffers[0].length, pld_len, sockfd, serv, m);
-		//sleep(2);
-		clock_t end2 = clock();
-		//printf("transmission time for one frame: %fms\n", (double)(end2-st)*1000/CLOCKS_PER_SEC);
-	}
-
-	cam.stop_capturing();
-    	printf("stop\n");
-    	cam.uninit_device();
-    	printf("uninit\n");
-    	cam.close_device();
-    	printf("close\n");
-
-
-
-}
-
-void send_init_udp(int sockfd, struct sockaddr_in & serv, socklen_t m) {
-	const uint8_t msg[] = "hello world";
-	uint8_t buffer[30];
-
-	for (uint16_t i = 0; i< 5; i++) {
-		struct chunk_header hdr = { 0, 0, 5, (uint16_t)(i + 1), sizeof(msg) };
-		send_chunk(buffer, hdr, msg, sizeof(msg), sockfd, serv, m);
-		printf("sent udp packet\n");
-		sleep(2);
+Udp_client::Udp_client(sock_type type) {
+	switch(type) {
+		case UDP:
+			init_udp();
+			break;
 	}
 }
 
-/*
-Fragment the entire frame buffer and send them out.
-TODO: pack and insert header field for each packet.
-*/
-void send_frame(const uint8_t * buf, 
-				size_t frame_len, 
-				const uint16_t pld_len, 
-				int sockfd, 
-				struct sockaddr_in & serv,
-				socklen_t m
-				) {
+void Udp_client::connect(struct address &addr) {
+	add_dst_addr(addr);
+}
 
-	uint8_t snd_buffer[pld_len];       // send buffer
-									   //uint16_t snd_buf_len = sizeof(snd_buffer);   // send buffer length
-	uint16_t rest = frame_len % CHUNK_LEN;       // last chunk data length
-	uint16_t total_chunk_num = frame_len / CHUNK_LEN;   // total chunk number
+void Udp_client::init_udp() {
+	m_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	m_serv.sin_family = AF_INET;
+	m_sock_len_c = sizeof(m_client);
+	m_sock_len_s = sizeof(m_serv);
+
+	//init send buffer.
+	m_chunk_pl_len = PAYLOAD_LEN;
+	m_snd_buf = (uint8_t*)calloc(CHUNK_SIZE, uint8_t);
+}
+
+void Udp_client::add_dst_addr(struct address &addr) {
+	// TODO: add = operator overload function.
+	m_addr.server_ip = addr.server_ip;
+	m_addr.server_port = addr.server_port;
+	m_serv.sin_port = htons(addr.server_port);
+	m_serv.sin_addr.s_addr = inet_addr(addr.server_ip);
+}
+
+// TODO: add new send frame function with customized header information.!!!
+void Udp_client::send_frame(const uint8_t * frame_buf, size_t frame_len) {    
+	size_t rest = frame_len % m_chunk_pl_len;       // last chunk data length
+	size_t total_chunk_num = frame_len / m_chunk_pl_len;   // total chunk number
 	if (rest) {
 		total_chunk_num += 1;
 	}
-	//uint16_t count;
-
-	for (uint16_t i = 0; i < total_chunk_num - 1; ++i) {
-		struct chunk_header hdr = { 1, 0, total_chunk_num, (uint16_t)(i + 1), CHUNK_LEN };
-		send_chunk(snd_buffer, hdr, buf + (i * CHUNK_LEN), CHUNK_LEN, sockfd, serv, m);
+	// TODO: replace i* m_chunk_pl_len with a counter to record the buf offset.
+	for (size_t i = 0; i < total_chunk_num - 1; ++i) {
+		struct chunk_header hdr = { 1, 0, total_chunk_num, (size_t)(i + 1), m_chunk_pl_len};
+		send_packet(frame_buf + (i * m_chunk_pl_len), m_chunk_pl_len, hdr);
 	}
 
 	if (rest) {
-		struct chunk_header hdr = { 1, 0, total_chunk_num, total_chunk_num, rest };
-		send_chunk(snd_buffer, hdr, buf + (frame_len - rest), rest, sockfd, serv, m);
+		struct chunk_header hdr = { 1, 0, total_chunk_num, total_chunk_num, rest};
+		send_packet(frame_buf + (frame_len - rest), rest, hdr);
 	}
 }
 
-/*
-insert header into the message.
-*/
-void send_chunk(uint8_t * buffer, 
-				struct chunk_header &hdr, 
-				const uint8_t * msg_buffer, 
-				size_t msg_len, int sockfd, 
-				struct sockaddr_in & serv,
-				socklen_t m
-				) {
-	// Insert header to the beginning of the send buffer.
-	//uint8_t * ptr = buffer;
+void Udp_client::send_frame_to(const uint8_t * frame_buf, size_t frame_len, struct address addr) {
+	add_dst_addr(addr);
+	send_frame(frame_buf, frame_len);
+}
 
-	memcpy(buffer, &hdr, sizeof(hdr));
+void Udp_client::send_packet(uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr) {
+	// Insert header to the beginning of the send buffer.
+	memcpy(m_snd_buf, &hdr, sizeof(hdr));
 	// Copy the message data after the header
-	memcpy(buffer + sizeof(hdr), msg_buffer, msg_len);
-	sendto(sockfd, buffer, HEADER_LEN + msg_len, 0, (struct sockaddr *)&serv, m);
+	memcpy(m_snd_buf + sizeof(hdr), msg_buffer, msg_len);
+	sendto(sockfd, m_snd_buf, HEADER_LEN + msg_len, 0, (struct sockaddr *)&serv, m_sock_len_s);
+}
+
+void Udp_client::send_packet_to(uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr, struct address addr) {
+	add_dst_addr(addr);
+	send_packet(msg_buf, msg_len, hdr);
+}
+
+void Udp_client::reset_addr(struct address &new_addr) {
+	add_dst_addr(addr);
+}
+
+void Udp_client::reset_payload_len(size_t new_pl_len) {
+	free(m_snd_buf);
+	m_chunk_pl_len = new_pl_len;
+	m_snd_buf = (uint8_t*)calloc(new_pl_len, uint8_t);
+}
+
+Udp_client::reset_addr~Udp_client() {
+	free(m_snd_buf);
+	freeaddrinfo(f_addrinfo);
+    close(m_sockfd);
 }

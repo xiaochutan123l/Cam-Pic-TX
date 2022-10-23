@@ -7,8 +7,8 @@ UDP packet handling related.
 */
 
 #define HEADER_LEN 8
-#define CHUNK_LEN 1400 // header not included
-#define PAYLOAD_SIZE HEADER_LEN + CHUNK_LEN
+#define PAYLOAD_LEN 1400 // header not included
+#define CHUNK_SIZE HEADER_LEN + PAYLOAD_LEN
 
 /**
 * Packet header for each UDP packet.

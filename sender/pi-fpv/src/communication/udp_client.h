@@ -19,6 +19,8 @@ public:
 
     void send_packet_to(const uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr, struct address &addr) override;
 
+    ssize_t recv_packet(char *recv_buf, size_t recv_buf_size);
+
     void reset_addr(struct address &new_addr) override;
 
     void reset_payload_len(size_t new_pl_len) override;

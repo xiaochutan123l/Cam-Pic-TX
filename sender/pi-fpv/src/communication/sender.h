@@ -16,6 +16,9 @@ public:
 
     virtual void send_packet_to(const uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr, struct address &addr) = 0;
 
+    //https://linux.die.net/man/2/recvfrom
+    virtual ssize_t recv_packet(char *recv_buf, size_t recv_buf_size) = 0;
+
     virtual void reset_addr(struct address &new_addr) = 0;
 
     virtual void reset_payload_len(size_t new_pl_len) = 0;

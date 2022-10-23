@@ -116,6 +116,11 @@ void Udp_client::send_packet_to(const uint8_t * msg_buf, size_t msg_len, struct 
 	send_packet(msg_buf, msg_len, hdr);
 }
 
+ssize_t Udp_client::recv_packet(char *recv_buf, size_t recv_buf_size) {
+	int flag = MSG_WAITALL;
+	return recv(m_sockfd, recv_buf, recv_buf_size, flag); 
+}
+
 void Udp_client::reset_addr(struct address &new_addr) {
 	add_dst_addr(new_addr);
 }

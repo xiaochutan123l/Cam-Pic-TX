@@ -2,8 +2,8 @@
 
 
 struct chunk_header unpack_header(uint8_t * pld_buffer, uint8_t hdr_len){
-    chunk_header ret_hdr;
-    chunk_header * hdr_ptr;
+    struct chunk_header ret_hdr;
+    struct chunk_header * hdr_ptr;
     //hdr_ptr = (chunk_header *)(buffer + hdr_len);
     hdr_ptr = (chunk_header *)pld_buffer;
     ret_hdr.type = hdr_ptr->type;
@@ -25,5 +25,9 @@ void pack_header(uint8_t * buffer, struct chunk_header &hdr){
 }
 
 void to_sock_addr(struct address addr) {
+    // TODO
+}
+
+void print_header(struct chunk_header &hdr) {
     // TODO
 }

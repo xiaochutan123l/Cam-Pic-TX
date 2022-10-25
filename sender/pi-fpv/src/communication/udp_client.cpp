@@ -30,8 +30,8 @@ void Udp_client::init_udp() {
 
 	//init send buffer.
 	m_chunk_pl_len = PAYLOAD_LEN;
-	recv_buf_size = RECV_BUF_LEN;
-	m_snd_buf = (uint8_t*)calloc(recv_buf_size, sizeof(uint8_t));
+	// TODO: maybe replace recv_buf_len with a more suitable value.
+	m_snd_buf = (uint8_t*)calloc(RECV_BUF_LEN, sizeof(uint8_t));
 }
 
 void Udp_client::add_dst_addr(struct address &addr) {
@@ -68,9 +68,12 @@ void Udp_client::send_frame_to(const uint8_t * frame_buf, size_t frame_len, stru
 
 void Udp_client::send_packet(const uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr) {
 	// Insert header to the beginning of the send buffer.
-	memcpy(m_snd_buf, &hdr, sizeof(hdr));
+	//printf("send_packet\n");
+	memcpy(m_snd_buf, &hdr, HEADER_LEN);
+	//printf("copy1\n");
 	// Copy the message data after the header
-	memcpy(m_snd_buf + sizeof(hdr), msg_buf, msg_len);
+	memcpy(m_snd_buf + HEADER_LEN, msg_buf, msg_len);
+	//printf("copy2\n");
 	sendto(m_sockfd, m_snd_buf, HEADER_LEN + msg_len, 0, (struct sockaddr *)&m_serv, m_sock_len_s);
 }
 
@@ -80,7 +83,7 @@ void Udp_client::send_packet_to(const uint8_t * msg_buf, size_t msg_len, struct 
 }
 
 // block receive.
-ssize_t Udp_client::recv_packet(char *recv_buf) {
+ssize_t Udp_client::recv_packet(uint8_t *recv_buf, size_t recv_buf_size) {
 	//int flag = MSG_WAITALL;
 	return recvfrom(m_sockfd, recv_buf, recv_buf_size, 0, (struct sockaddr*)&m_client, &m_sock_len_c); 
 }

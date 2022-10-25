@@ -26,7 +26,7 @@ public:
 
     void send_packet_to(const uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr, struct address &addr) override;
 
-    ssize_t recv_packet(char *recv_buf);
+    ssize_t recv_packet(uint8_t *recv_buf, size_t recv_buf_size);
 
     void reset_addr(struct address &new_addr) override;
 
@@ -42,9 +42,7 @@ private:
 	socklen_t m_sock_len_c;
 	socklen_t m_sock_len_s;
     uint16_t m_chunk_pl_len;
-    size_t recv_buf_size;
     struct address m_addr;
-
     uint8_t *m_snd_buf;
 
     void add_dst_addr(struct address &addr);

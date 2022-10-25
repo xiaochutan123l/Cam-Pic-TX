@@ -2,5 +2,5 @@
 
 int main() {
 
-    reutnr 1;
+    return 1;
 }

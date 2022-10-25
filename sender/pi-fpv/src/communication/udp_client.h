@@ -1,5 +1,12 @@
 #pragma once 
 
+#include<arpa/inet.h>
+#include<unistd.h>
+#include<sys/socket.h>
+#include<sys/types.h>
+#include<stdio.h>
+#include<stdlib.h>
+
 #include "sender.h"
 #include "packet_handler.h"
 
@@ -19,7 +26,7 @@ public:
 
     void send_packet_to(const uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr, struct address &addr) override;
 
-    ssize_t recv_packet(char *recv_buf, size_t recv_buf_size);
+    ssize_t recv_packet(char *recv_buf);
 
     void reset_addr(struct address &new_addr) override;
 
@@ -29,10 +36,13 @@ public:
 
 private:
     int m_sockfd;
+    // TODO: change client to vector if later multiple server/client should communicate.
 	struct sockaddr_in m_serv, m_client;
+    // store the source address length of the incoming packet.
 	socklen_t m_sock_len_c;
 	socklen_t m_sock_len_s;
     uint16_t m_chunk_pl_len;
+    size_t recv_buf_size;
     struct address m_addr;
 
     uint8_t *m_snd_buf;

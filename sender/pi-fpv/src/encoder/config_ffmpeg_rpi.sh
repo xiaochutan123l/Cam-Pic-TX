@@ -3,7 +3,8 @@ PREFIX=/usr/local
 ./configure \
 --enable-gpl    --enable-version3 --enable-nonfree \
 --enable-static --disable-shared \
-\
+--cpu=armv7-a \
+--target-os=linux \
 --prefix=$PREFIX \
 \
 --disable-opencl \
@@ -14,9 +15,9 @@ PREFIX=/usr/local
 --enable-small \
 \
 --enable-ffmpeg \
---enable-ffplay \
+#--enable-ffplay \
 #--enable-ffserver \
---enable-ffprobe \
+#--enable-ffprobe \
 \
 --disable-doc \
 --disable-htmlpages \
@@ -24,7 +25,7 @@ PREFIX=/usr/local
 --disable-txtpages \
 --disable-manpages \
 \
---disable-everything \
+#--disable-everything \
 \
 --enable-libx264 \
 --enable-encoder=libx264 \

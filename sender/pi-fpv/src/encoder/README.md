@@ -20,7 +20,7 @@ link: https://code.videolan.org/videolan/x264/
 - cd x264
 - git checkout stable
 - ./configure --host=arm-unknown-linux-gnueabi --enable-static --disable-opencl
-- make -j4
+ make -j4
 - sudo make install
 
 ### Install FFmpeg.
@@ -34,11 +34,33 @@ Model name:                      Cortex-A53
 #### Install 
 -git clone git://source.ffmpeg.org/ffmpeg --depth=1
 -cd ffmpeg
+change config_ffmpeg_rpi.sh to remove unneccessary things, add --disable-everything and then enable-xxx what required.
 - cp ../../Cam-Pic-TX/sender/pi-fpv/src/encoder/config_ffmpeg_rpi.sh ./
 -chmod +x config_ffmpeg_rpi.sh
-- ./configure --arch=armv7-a --target-os=linux --enable-gpl --enable-libx264 --enable-nonfree --enable-mmal
+- ./config_ffmpeg_rpi.sh   
 - make
-- make install
+- sudo make install
 h264-omx only supports 32bit.
+#### configure parameters:
+https://blog.csdn.net/yzhang6_10/article/details/77104211
 
+### lib API:
+https://libav.org/documentation/doxygen/master/index.html
 
+### Links
+ 
+#### encode video expamle
+https://zhuanlan.zhihu.com/p/547340382
+
+#### encode latency
+https://www.twblogs.net/a/5e504e63bd9eee21167d3a83 
+
+#### compile application
+the libs are /usr/local/lib
+    include /usr/local/include
+to check the dependencies for each libs:
+- pkg-config --libs libavcodec 
+
+or complie like this:
+- gcc main.c ´pkg-config --libs libavcodec´
+ 

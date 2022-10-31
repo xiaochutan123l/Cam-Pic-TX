@@ -120,13 +120,15 @@ int main(int argc, char **argv)
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    c->gop_size = 1;
+    c->gop_size = 5;
     //c->max_b_frames = 1;
     //c->pix_fmt = AV_PIX_FMT_YUV420P;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
 
     if (codec->id == AV_CODEC_ID_H264)
         av_opt_set(c->priv_data, "preset", "slow", 0);
+        //av_opt_set(c->priv_data, "preset", "superfast", 0);
+        //av_opt_set(c->priv_data, "tune", "zerolatency", 0);
     printf("open codec...\n");
     /* open it */
     ret = avcodec_open2(c, codec, NULL);

@@ -130,3 +130,28 @@ or complie like this:
 
 `gcc main.c ´pkg-config --libs libavcodec´`
  
+ ### 可能的问题：
+
+ v4l2m2m 不支持b帧，并且没有gop参数。
+ 如果之后换成其他设备或者系统需要考虑重新测试是否支持。
+ HEVC->H.265
+Failed to set gop size: Invalid argument: 但是并没有解决我的问题。
+https://www.mail-archive.com/ffmpeg-user@ffmpeg.org/msg28288.html
+
+- 树莓派zero2w上支持h264硬件加速，但是gop和max_b_frames 参数ioctl不支持，应该是
+  树莓派硬件或者驱动的问题。但是libx264这些参数都是支持的，没有问题
+  v4l2m2m源码：
+  [FFmpeg/libavcodec/v4l2_m2m_enc.c](https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/v4l2_m2m_enc.c)
+
+- 鉴于此问题，可以测试v4l2m2m和libx264哪个效率更好，毕竟树莓派不是最终使用的硬件
+  等换硬件之后测试是否支持这些参数设置。如果支持h265/HEVC更好
+
+- libavcodec 可以设置zerocopy低延时模式：
+    [从ffmpeg源代码分析如何解决ffmpeg编码的延迟问题](https://zhuanlan.zhihu.com/p/438062997)
+    ```c
+    if (codec->id == AV_CODEC_ID_H264)
+        //av_opt_set(c->priv_data, "preset", "slow", 0);
+        // slow 模式比较慢，对于图传低延时模式更合适。
+        av_opt_set(c->priv_data, "preset", "superfast", 0);
+        av_opt_set(c->priv_data, "tune", "zerolatency", 0);
+    ```

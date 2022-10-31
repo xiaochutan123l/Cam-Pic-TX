@@ -2,6 +2,7 @@
 
 #include "cam_controller.h"
 #include "v4l2_capture.h"
+#include "fmt_utils.h"
 
 class Cam_Controller_Impl : public Cam_Controller{
 public:

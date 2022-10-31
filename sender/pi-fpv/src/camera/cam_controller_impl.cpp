@@ -71,7 +71,7 @@ void Cam_Controller_Impl::_set_frame_format() {
     
     //set_fmt.pixelformat = V4L2_PIX_FMT_YUV420;
     //set_fmt.pixelformat = V4L2_PIX_FMT_YUYV;
-    set_fmt.pixelformat = V4L2_PIX_FMT_JPEG;
+    set_fmt.pixelformat = to_v4l2_fmt(set_fmt.image_fmt);
     set_fmt.field = V4L2_FIELD_INTERLACED;
     set_frame_format(&set_fmt);
 }

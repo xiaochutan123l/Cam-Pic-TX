@@ -12,13 +12,13 @@ enum class CAP_TYPE {
 
 enum class IMAGE_FMT {
 	// cmd: v4l2-ctl --list-formats-ext to see what format are supported.
-	RGB3,
+	RGB24,
 	JPEG,
-	H264,
+	//H264,
 	MJPG,
-	YUV444,
-	YUV422,
-	YUV420,
+	//YUV444,
+	//YUV422,
+	YUV420P,
 	// and more.
 };
 /*

@@ -7,25 +7,12 @@ PREFIX=/usr/local
 --target-os=linux \
 --prefix=$PREFIX \
 \
---disable-opencl \
---disable-thumb \
---disable-pic \
---disable-stripping \
+--disable-everything \
 \
 --enable-small \
 \
 --enable-ffmpeg \
-#--enable-ffplay \
-#--enable-ffserver \
-#--enable-ffprobe \
-\
---disable-doc \
---disable-htmlpages \
---disable-podpages \
---disable-txtpages \
---disable-manpages \
-\
-#--disable-everything \
+--enable-ffprobe \
 \
 --enable-libx264 \
 --enable-encoder=libx264 \
@@ -70,25 +57,32 @@ PREFIX=/usr/local
 --enable-parser=h264 \
 --enable-parser=aac \
 \
---enable-protocol=file \
 --enable-protocol=tcp \
---enable-protocol=rtmp \
---enable-protocol=cache \
---enable-protocol=pipe \
 \
 --enable-filter=aresample \
 --enable-filter=allyuv \
 --enable-filter=scale \
 --enable-libfreetype \
 \
+--enable-mmal \
+--enable-omx \
+--enable-omx-rpi \
+\
 --enable-indev=v4l2 \
 --enable-indev=alsa \
 \
---enable-omx \
---enable-omx-rpi \
---enable-encoder=h264_omx \
+--enable-outdev=v4l2 \
+--enable-outdev=alsa \
 \
---enable-mmal \
 --enable-hwaccel=h264_mmal \
 --enable-decoder=h264_mmal \
+--enable-encoder=h264_omx \
 \
+
+#--enable-omx \
+#--enable-omx-rpi \
+#\
+#--enable-v4l2_m2m \
+#--enable-hwaccel=v4l2_m2m \
+#--enable-encoder=h264_v4l2m2m \
+

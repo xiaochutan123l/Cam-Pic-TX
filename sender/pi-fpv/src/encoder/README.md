@@ -20,6 +20,45 @@ sudo apt-get --purge remove ffmpeg
 sudo apt-get --purge autoremove
 ```
 
+### Install dependencies:
+
+install the following dependencies if errors:
+
+#### omx dependencies:
+
+```bash
+sudo apt-get install libomxil-bellagio-dev
+```
+
+if still not work: update raspberry pi firmware
+
+```bash
+sudo rpi-update
+sudo reboot
+```
+
+#### alsa dependency:
+```bash
+sudo apt-get install libasound2-dev
+```
+
+#### ERROR: --enable-hwaccel=h264_mmal did not match anything
+
+这个无所谓，默认就是开启h264硬件加速的，不用担心，可以忽略
+
+#### or install them at the beginning:
+
+```bash
+sudo apt-get install libasound2-dev libomxil-bellagio-dev
+```
+
+these may also help for possible errors:
+
+```bash
+sudo apt-get install libopus-dev libvpx-dev
+```
+
+
 ## Install x264 encoder.
 [x264 link](https://code.videolan.org/videolan/x264/)
 
@@ -60,7 +99,10 @@ make
 sudo make install
 ```
 
+其中enable-omx和enable-omx-rpi就是开启树莓派硬解码的选项
 Hardware acceleration h264-omx only supports 32bit.
+
+h264_v4l2m2m may cause green problem. 
 
 #### configure parameters:
 https://blog.csdn.net/yzhang6_10/article/details/77104211

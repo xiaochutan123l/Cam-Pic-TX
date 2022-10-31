@@ -101,7 +101,7 @@ sudo make install
 
 其中enable-omx和enable-omx-rpi就是开启树莓派硬解码的选项
 Hardware acceleration h264-omx only supports 32bit.
-
+h264-omx is partially deprecated by raspberry pi.
 h264_v4l2m2m may cause green problem. 
 
 #### configure parameters:

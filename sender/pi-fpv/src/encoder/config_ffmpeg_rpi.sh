@@ -64,25 +64,22 @@ PREFIX=/usr/local
 --enable-filter=scale \
 --enable-libfreetype \
 \
---enable-mmal \
---enable-omx \
---enable-omx-rpi \
-\
 --enable-indev=v4l2 \
 --enable-indev=alsa \
 \
 --enable-outdev=v4l2 \
 --enable-outdev=alsa \
 \
---enable-hwaccel=h264_mmal \
---enable-decoder=h264_mmal \
---enable-encoder=h264_omx \
+--enable-v4l2-m2m \
+--enable-encoder=h264_v4l2m2m \
+--enable-decoder=h264_v4l2m2m \
+--enable-hwaccel=v4l2_m2m \
 \
-
+#--enable-mmal \
 #--enable-omx \
 #--enable-omx-rpi \
 #\
-#--enable-v4l2_m2m \
-#--enable-hwaccel=v4l2_m2m \
-#--enable-encoder=h264_v4l2m2m \
-
+#--enable-hwaccel=h264_mmal \
+#--enable-decoder=h264_mmal \
+#--enable-encoder=h264_omx \
+\

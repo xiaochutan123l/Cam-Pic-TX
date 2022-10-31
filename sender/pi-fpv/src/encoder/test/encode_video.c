@@ -84,28 +84,32 @@ int main(int argc, char **argv)
     filename = argv[1];
     codec_name = argv[2];
 
+    printf("trying to find codec...\n");
+
     /* find the mpeg1video encoder */
     codec = avcodec_find_encoder_by_name(codec_name);
     if (!codec) {
         fprintf(stderr, "Codec '%s' not found\n", codec_name);
         exit(1);
     }
-
+    printf("find codec...\n");
     c = avcodec_alloc_context3(codec);
     if (!c) {
         fprintf(stderr, "Could not allocate video codec context\n");
         exit(1);
     }
-
+    printf("alloc...\n");
     pkt = av_packet_alloc();
     if (!pkt)
         exit(1);
-
+    printf("alloc...ok\n");
     /* put sample parameters */
     c->bit_rate = 400000;
     /* resolution must be a multiple of two */
-    c->width = 352;
-    c->height = 288;
+    //c->width = 352;
+    //c->height = 288;
+    c->width = 1280;
+    c->height = 720;
     /* frames per second */
     c->time_base = (AVRational){1, 25};
     c->framerate = (AVRational){25, 1};
@@ -116,26 +120,27 @@ int main(int argc, char **argv)
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    c->gop_size = 10;
-    c->max_b_frames = 1;
+    c->gop_size = 1;
+    //c->max_b_frames = 1;
+    //c->pix_fmt = AV_PIX_FMT_YUV420P;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
 
     if (codec->id == AV_CODEC_ID_H264)
         av_opt_set(c->priv_data, "preset", "slow", 0);
-
+    printf("open codec...\n");
     /* open it */
     ret = avcodec_open2(c, codec, NULL);
     if (ret < 0) {
         fprintf(stderr, "Could not open codec: %s\n", av_err2str(ret));
         exit(1);
     }
-
+    printf("open...ok\n");
     f = fopen(filename, "wb");
     if (!f) {
         fprintf(stderr, "Could not open %s\n", filename);
         exit(1);
     }
-
+    printf("frame alloc...\n");
     frame = av_frame_alloc();
     if (!frame) {
         fprintf(stderr, "Could not allocate video frame\n");
@@ -144,13 +149,13 @@ int main(int argc, char **argv)
     frame->format = c->pix_fmt;
     frame->width  = c->width;
     frame->height = c->height;
-
+    printf("frame buffer...\n");
     ret = av_frame_get_buffer(frame, 0);
     if (ret < 0) {
         fprintf(stderr, "Could not allocate the video frame data\n");
         exit(1);
     }
-
+    printf("encode...\n");
     /* encode 1 second of video */
     for (i = 0; i < 25; i++) {
         fflush(stdout);
@@ -194,7 +199,7 @@ int main(int argc, char **argv)
         /* encode the image */
         encode(c, frame, pkt, f);
     }
-
+    printf("encode out loop...\n");
     /* flush the encoder */
     encode(c, NULL, pkt, f);
 

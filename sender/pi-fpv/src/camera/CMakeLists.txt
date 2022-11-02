@@ -1,5 +1,6 @@
 set(SRC_LIST 
     cam_controller_impl.cpp
+    fmt_utils.cpp
 
     cam_driver
     )

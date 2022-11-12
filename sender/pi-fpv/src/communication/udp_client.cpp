@@ -43,6 +43,8 @@ void Udp_client::add_dst_addr(struct address &addr) {
 }
 
 // TODO: add new send frame function with customized header information.!!!
+// TODO: 1. change to new packet header
+//		 2. try to use some more effective method to handle the packet pack and unpack.
 void Udp_client::send_frame(const uint8_t * frame_buf, size_t frame_len) {    
 	uint16_t rest = (uint16_t)(frame_len % m_chunk_pl_len);       // last chunk data length
 	uint16_t total_chunk_num = (uint16_t)(frame_len / m_chunk_pl_len);   // total chunk number

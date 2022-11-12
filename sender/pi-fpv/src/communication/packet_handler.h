@@ -56,6 +56,8 @@ Message Header
 |                       Frame Sequence Number                  |
 +--------------------------------------------------------------+
 
+
+
 - Message Type:
 	- Video: This message data is a video frame
 	- Audio: This message data is a audio frame
@@ -89,6 +91,7 @@ Chunk Header - Audio
 |                           Timestamp                          |
 +--------------------------------------------------------------+
 
+
 - Format: Audio frame format
 - Channel Number: channel number of this audio frame
 - Sample Rate: audio frame sample rate [Hz]
@@ -106,6 +109,10 @@ ACK/ACK_CTL Header
 |     Frame Sequence Number     |         Frame ACK            |
 +-------------------------------+------------------------------+
 |          Chunk Length         |        Request Number        |
++-------------------------------+------------------------------+
+
+ACK data:
+
 +-------------------------------+------------------------------+
 |         Request Type 1        |        Request Data 1        |
 +-------------------------------+------------------------------+
@@ -145,10 +152,75 @@ enum class sock_type {
 	DPDK,
 };
 
+// 8 Byte
+struct chunk_header_video_v2 {
+	uint8_t format;
+	uint8_t frame_rate;
+	uint8_t codec;
+	uint8_t reserved;
+	uint32_t timestamp;
+};
+
+// 8 byte
+struct chunk_header_audio_v2 {
+	uint8_t format;
+	uint8_t frame_rate;
+	uint8_t codec;
+	uint8_t reserved;
+	uint32_t timestamp;
+};
+
+union chunk_header_v2 {
+	struct chunk_header_video_v2 hdr_v;
+	struct chunk_header_audio_v2 hdr_a;
+};
+
+struct msg_header_v2{
+	uint8_t msg_type;
+	uint8_t flag;
+	uint16_t chunk_num;
+	uint16_t total_chunk_num;
+	uint16_t chunk_len;
+	uint32_t frame_seq_num;
+};
+
+// 20 Byte
+struct packet_header_v2{
+	struct msg_header_v2 msg_header;
+	union chunk_header_v2 chunk_header;
+};
+
+// 12 Byte
+struct ack_packet_header {
+	uint8_t msg_type;
+	uint8_t flag;
+	uint8_t loss_rate;
+	uint8_t chunk_num;
+	uint16_t frame_seq_num;
+	uint16_t frame_ack;
+	uint16_t chunk_len;
+	uint16_t request_num;	
+};
+
+enum class MSG_TYPE {
+	VIDEO_MSG,
+	AUDIO_MSG,
+	ACK,
+	ACK_REQ,
+};
+// TODO: maybe set buffer pointer to data position and return a uint8_t *ptr.
+void unpack_msg_header(uint8_t * pkt_buffer, struct msg_header_v2 &msg_hdr);
+void unpack_chunk_video_header(uint8_t * pkt_buffer, struct chunk_header_video_v2 &chunk_hdr);
+void unpack_chunk_audio_header(uint8_t * pkt_buffer, struct chunk_header_audio_v2 &chunk_hdr);
+void unpack_packet_header(uint8_t * pkt_buffer, struct packet_header_v2 &pkd_hdr);
+uint8_t get_msg_type(uint8_t * pkt_buffer);
+
+void pack_packet_header(uint8_t * pkt_buffer, struct packet_header_v2 &hdr);
+
 /*
 parse header from a chunk.
 */
-struct chunk_header unpack_header(uint8_t * pld_buffer, uint8_t hdr_len);
+struct chunk_header unpack_header(uint8_t * pkt_buffer, uint8_t hdr_len);
 
 
 /*

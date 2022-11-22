@@ -10,25 +10,28 @@ int main() {
     struct address addr = {(char*)"127.0.0.1", 9998};
     sdr->connect(addr);
     printf("connected\n");
-
-    uint16_t msg_len = 1400;
-    uint8_t * msg_buf = (uint8_t*)calloc(msg_len, sizeof(uint8_t));
+    // TODO: use real frame data to verify received correctly.
+    uint16_t frame_len = 30000;
+    uint8_t * frame_buf = (uint8_t*)calloc(frmae_len, sizeof(uint8_t));
     int recv_buf_len = 2048;
     uint8_t * recv_buf = (uint8_t*)calloc(recv_buf_len, sizeof(uint8_t));
 
     printf("ready for send\n");
 
-    struct chunk_header hdr_muster = {0, 0, 100, 0, msg_len};
-    for (uint16_t i = 0; i < 100; i++) {
-        //printf("sending %d-th packet\n", i);
-        hdr_muster.chunk_num = i;
-        //printf("sending %d-th packet2\n", i);
-        sdr->send_packet(msg_buf, msg_len, hdr_muster);
-        printf("sent %d-th packet\n", i);
-    }
+    struct chunk_header_video hdr_muster = {0, 30, 1, 0, 1234};
+    MSG_TYPE type = MSG_TYPE::VIDEO_MSG;
+    MSG_FLAGS flags = MSG_FLAGS::NONE;
+    sdr->send_frame(frame_buf,
+                    frame_len,
+                    static_cast<uint8_t>(type), 
+                    static_cast<uint8_t>(flags),
+                    &hdr_muster
+                    )
 
     int len = sdr->recv_packet(recv_buf, (size_t)recv_buf_len);
     printf("received: %s\n", recv_buf);
-    
+
+    free(frame_buf);
+    free(recv_buf);
     return 1;
 }

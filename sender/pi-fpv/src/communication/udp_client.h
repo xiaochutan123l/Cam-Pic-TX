@@ -18,13 +18,21 @@ public:
 
     void connect(struct address &addr);
 
-    void send_frame(const uint8_t * frame_buf, size_t frame_len) override;
+    void send_frame(const uint8_t * frame_buf, 
+                    size_t frame_len, 
+                    uint8_t msg_type, 
+                    uint8_t flags, 
+                    struct chunk_header *c_hdr) override;
 
-    void send_frame_to(const uint8_t * frame_buf, size_t frame_len, struct address &addr) override;
+    void send_frame_to(const uint8_t * frame_buf, 
+                        size_t frame_len, 
+                        size_t frame_len, 
+                        uint8_t msg_type, 
+                        uint8_t flags, 
+                        struct chunk_header *c_hdr, 
+                        struct address &addr) override;
 
-    void send_packet(const uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr) override;
-
-    void send_packet_to(const uint8_t * msg_buf, size_t msg_len, struct chunk_header &hdr, struct address &addr) override;
+    //void send_ack(const uint8_t * ack_buf, size_t ack_len) override;
 
     ssize_t recv_packet(uint8_t *recv_buf, size_t recv_buf_size);
 
@@ -35,6 +43,10 @@ public:
     ~Udp_client();
 
 private:
+    void send_packet(const uint8_t * msg_buf, size_t msg_len, struct packet_header *pkt_hdr);
+
+    //void send_packet_to(const uint8_t * msg_buf, size_t msg_len, struct packet_header *pkt_hdr, struct address &addr);
+
     int m_sockfd;
     // TODO: change client to vector if later multiple server/client should communicate.
 	struct sockaddr_in m_serv, m_client;

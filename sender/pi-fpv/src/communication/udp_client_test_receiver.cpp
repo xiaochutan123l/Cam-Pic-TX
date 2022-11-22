@@ -17,8 +17,10 @@ socklen_t m_sock_len_s;
 //uint16_t m_chunk_pl_len;
 //struct address m_addr;
 
-void print(struct chunk_header &hdr) {
-    std::cout << "type: " << hdr.type 
+check_header(uint8_t *recv_buf, int recv_len); {
+    std::cout << "type: " << get_msg_type(recv_buf) << std::endl;
+    // TODO: print all header info.
+    std::cout << "type: " << get_msg_type(recv_buf)
         << ", flags: " << hdr.flags 
         << ", total_chunk_num: " << hdr.total_chunk_num 
         << ", chunk_num: " << hdr.chunk_num
@@ -40,16 +42,35 @@ int main() {
         exit(EXIT_FAILURE);
     }
     
+    int frame_buf_len = 30000;
+    uint8_t * frame_buf = (uint8_t*)calloc(recv_buf_len, sizeof(uint8_t));
+
     int recv_buf_len = 2048;
     uint8_t * recv_buf = (uint8_t*)calloc(recv_buf_len, sizeof(uint8_t));
     int recv_len = 0;
 	
-    struct chunk_header chunk_hdr;
+    int total_recv_bytes = 0;
 
-    for (int i = 0; i < 100; i++) {
+    struct packet_header pkt_hdr;
+
+    while (1) {
         recv_len = recvfrom(m_sockfd, recv_buf, recv_buf_len, 0, (struct sockaddr*)&m_client, &m_sock_len_c); 
-        chunk_hdr = unpack_header(recv_buf, HEADER_LEN);
-        print(chunk_hdr);
+        //chunk_hdr = unpack_header(recv_buf, HEADER_LEN);
+        check_header(recv_buf, recv_len);
+        struct msg_header msg_hdr;
+        unpack_msg_header(recv_buf, &msg_hdr);
+
+        memcpy(recv_buf, frame_buf_len + total_recv_bytes, msg_hdr.chunk_len-CHUNK_HDR_LEN);
+
+        total_recv_bytes += recv_len - PKT_HDR_LEN;
+
+        if (msg_hdr.chunk_len != recv_len - MSG_HDR_LEN) {
+            std::cout << "-----receive bytes size error -------" << stfd::endl;
+        }
+        if (msg_hdr.chunk_num == msg_hdr.total_chunk_num) {
+            std::cout << "get full packets" << stfd::endl;
+            break;
+        }
     }
 
     std::string msg = "received successully!";
@@ -60,6 +81,7 @@ int main() {
     sendto(m_sockfd, m_snd_buf, msg_len, 0, (struct sockaddr *)&m_client, m_sock_len_c);
 
     close(m_sockfd);
+    free(frame_buf);
     free(recv_buf);
     return 1;
 }

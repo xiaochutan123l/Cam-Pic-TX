@@ -1,18 +1,18 @@
 #include "packet_handler.h"
 
 
-void unpack_msg_header(uint8_t * pkt_buffer, struct msg_header_v2 *msg_hdr) {
+void unpack_msg_header(uint8_t * pkt_buffer, struct msg_header *msg_hdr) {
     memcpy(msg_hdr, pkd_buffer, MSG_HDR_LEN);
 }
 
-void unpack_chunk_video_header(uint8_t * pkt_buffer, struct chunk_header_video_v2 *chunk_hdr) {
+void unpack_chunk_video_header(uint8_t * pkt_buffer, struct chunk_header_video *chunk_hdr) {
     memcpy(chunk_hdr, pkd_buffer, CHUNK_HDR_LEN);
 }
-void unpack_chunk_audio_header(uint8_t * pkt_buffer, struct chunk_header_audio_v2 *chunk_hdr) {
+void unpack_chunk_audio_header(uint8_t * pkt_buffer, struct chunk_header_audio *chunk_hdr) {
     memcpy(chunk_hdr, pkd_buffer, CHUNK_HDR_LEN);
 }
 
-void unpack_packet_header(uint8_t * pkt_buffer, struct packet_header_v2 *pkd_hdr) {
+void unpack_packet_header(uint8_t * pkt_buffer, struct packet_header *pkd_hdr) {
     memcpy(pkt_hdr, pkd_buffer, PKT_HDR_LEN);
 }
 

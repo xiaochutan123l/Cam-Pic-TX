@@ -1,6 +1,7 @@
 #ifndef _PACKET_HANDLER_H_
 #define _PACKET_HANDLER_H_
 #include <stdint.h>
+#include <cstring>
 /*
 UDP packet handling related.
 */
@@ -30,6 +31,7 @@ UDP packet handling related.
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 */
+/*
 struct chunk_header {
 	uint8_t type;
 	uint8_t flags;
@@ -37,6 +39,7 @@ struct chunk_header {
 	uint16_t chunk_num;
 	uint16_t chunk_len;
 };
+*/
 
 /* Messager Header*/
 /*
@@ -221,25 +224,25 @@ enum class MSG_TYPE {
 // not defined yet
 enum class MSG_FLAGS {
 	// =1, 2, 4, 8...
-	NONE;
-}
+	NONE,
+};
 
-enum class V_FMT {
+enum class VIDEO_FMT {
 	RGB24,
 	JPEG,
-	YUV420;
+	YUV420,
 	// need add more
-}
+};
 
-enum class A_FMT {
+enum class AUDIO_FMT {
 	PCM,
 	// need more
-}
+};
 
 enum class ACK_FLAGS {
 	AUDIO,
 	VIDEO,
-}
+};
 
 enum class ACK {
 	// 100% received
@@ -248,13 +251,13 @@ enum class ACK {
 	ACCEPTABLE,
 	// loss can not be covered.
 	FIALED,
-}
+};
 
 enum class ACK_REQ {
 	// add network coding
 	ADD_NC,
 	// need more
-}
+};
 
 // TODO: maybe set buffer pointer to data position and return a uint8_t *ptr.
 
@@ -262,16 +265,22 @@ enum class ACK_REQ {
 void unpack_msg_header(uint8_t * pkt_buffer, struct msg_header *msg_hdr);
 void unpack_chunk_video_header(uint8_t * pkt_buffer, struct chunk_header_video *chunk_hdr);
 void unpack_chunk_audio_header(uint8_t * pkt_buffer, struct chunk_header_audio *chunk_hdr);
-void unpack_packet_header(uint8_t * pkt_buffer, struct packet_header *pkd_hdr);
+void unpack_packet_header(uint8_t * pkt_buffer, struct packet_header *pkt_hdr);
 
 uint8_t get_msg_type(uint8_t * pkt_buffer);
 
 void pack_packet_header(uint8_t * pkt_buffer, struct packet_header &hdr);
 
+void print_pkt_header(uint8_t *buf, int len);
+
+void print_msg_header(uint8_t *buf, int len);
+
+void print_chunk_header(uint8_t *buf, int len);
+
 /*
 parse header from a chunk.
 */
-struct chunk_header unpack_header(uint8_t * pkt_buffer, uint8_t hdr_len);
+//struct chunk_header unpack_header(uint8_t * pkt_buffer, uint8_t hdr_len);
 
 struct address {
 	char *ip;

@@ -22,14 +22,13 @@ public:
                     size_t frame_len, 
                     uint8_t msg_type, 
                     uint8_t flags, 
-                    struct chunk_header *c_hdr) override;
+                    union chunk_header *c_hdr) override;
 
     void send_frame_to(const uint8_t * frame_buf, 
                         size_t frame_len, 
-                        size_t frame_len, 
                         uint8_t msg_type, 
                         uint8_t flags, 
-                        struct chunk_header *c_hdr, 
+                        union chunk_header *c_hdr, 
                         struct address &addr) override;
 
     //void send_ack(const uint8_t * ack_buf, size_t ack_len) override;

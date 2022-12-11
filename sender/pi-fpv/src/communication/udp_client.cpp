@@ -48,7 +48,7 @@ void Udp_client::send_frame(const uint8_t * frame_buf,
 							size_t frame_len, 
 							uint8_t msg_type, 
                             uint8_t flags, 
-							struct chunk_header *c_hdr) { 
+							union chunk_header *c_hdr) { 
 
 	// static_cast<uint8_t>(msg_enum)
 	uint16_t rest = (uint16_t)(frame_len % m_chunk_pl_len);       // last chunk data length
@@ -58,24 +58,24 @@ void Udp_client::send_frame(const uint8_t * frame_buf,
 	}
 
 	struct packet_header pkt_hdr;
-	pkt_hdr->msg_header.msg_type = msg_type,
-	pkt_hdr->msg_header.flags = flags,
-	pkt_hdr->msg_header.total_chunk_num = total_chunk_num,
-	pkt_hdr->msg_header.chunk_len = m_chunk_pl_len + CHUNK_HDR_LEN;
-	pkt_hdr->msg_header.frame_seq_num = 0; // frame_seq_num currently set to 0.
+	pkt_hdr.msg_header.msg_type = msg_type,
+	pkt_hdr.msg_header.flags = flags,
+	pkt_hdr.msg_header.total_chunk_num = total_chunk_num,
+	pkt_hdr.msg_header.chunk_len = m_chunk_pl_len + CHUNK_HDR_LEN;
+	pkt_hdr.msg_header.frame_seq_num = 0; // frame_seq_num currently set to 0.
 
 	// TODO: replace i* m_chunk_pl_len with a counter to record the buf offset.
 	for (uint16_t i = 0; i < total_chunk_num - 1; ++i) {
 		//struct chunk_header hdr = { 1, 0, total_chunk_num, (uint16_t)(i + 1), m_chunk_pl_len};
-		pkt_hdr->msg_header.chunk_num = (uint16_t)(i + 1);
-	    pkt_hdr->chunk_header = c_hdr,
+		pkt_hdr.msg_header.chunk_num = (uint16_t)(i + 1);
+	    pkt_hdr.chunk_header = *c_hdr,
 		send_packet(frame_buf + (i * m_chunk_pl_len), m_chunk_pl_len, &pkt_hdr);
 	}
 
 	if (rest) {
-		pkt_hdr->msg_header.chunk_num = total_chunk_num;
-	    pkt_hdr->chunk_header = rest + CHUNK_HDR_LEN;
-		send_packet(frame_buf + (frame_len - rest), rest, hdr);
+		pkt_hdr.msg_header.chunk_num = total_chunk_num;
+	    pkt_hdr.msg_header.chunk_len = rest + CHUNK_HDR_LEN;
+		send_packet(frame_buf + (frame_len - rest), rest, &pkt_hdr);
 	}
 }
 
@@ -83,10 +83,10 @@ void Udp_client::send_frame_to(const uint8_t * frame_buf,
 							size_t frame_len, 
 							uint8_t msg_type, 
                             uint8_t flags, 
-							struct chunk_header *c_hdr, 
+							union chunk_header *c_hdr, 
 							struct address &addr) {
 	add_dst_addr(addr);
-	send_frame(frame_buf, frame_len, msg_type, flag);
+	send_frame(frame_buf, frame_len, msg_type, flags, c_hdr);
 }
 
 void Udp_client::send_packet(const uint8_t * msg_buf, size_t msg_len, struct packet_header *pkt_hdr) {

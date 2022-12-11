@@ -17,16 +17,17 @@ socklen_t m_sock_len_s;
 //uint16_t m_chunk_pl_len;
 //struct address m_addr;
 
-check_header(uint8_t *recv_buf, int recv_len); {
-    std::cout << "type: " << get_msg_type(recv_buf) << std::endl;
+void check_header(uint8_t *recv_buf, int recv_len) {
+    std::cout << "type: " << int(get_msg_type(recv_buf)) << std::endl;
     // TODO: print all header info.
+    /*
     std::cout << "type: " << get_msg_type(recv_buf)
         << ", flags: " << hdr.flags 
         << ", total_chunk_num: " << hdr.total_chunk_num 
         << ", chunk_num: " << hdr.chunk_num
         << "chunk_len: " << hdr.chunk_len 
         << std::endl;
-         
+    */
 }
 
 int main() {
@@ -43,7 +44,7 @@ int main() {
     }
     
     int frame_buf_len = 30000;
-    uint8_t * frame_buf = (uint8_t*)calloc(recv_buf_len, sizeof(uint8_t));
+    uint8_t * frame_buf = (uint8_t*)calloc(frame_buf_len, sizeof(uint8_t));
 
     int recv_buf_len = 2048;
     uint8_t * recv_buf = (uint8_t*)calloc(recv_buf_len, sizeof(uint8_t));
@@ -60,15 +61,15 @@ int main() {
         struct msg_header msg_hdr;
         unpack_msg_header(recv_buf, &msg_hdr);
 
-        memcpy(recv_buf, frame_buf_len + total_recv_bytes, msg_hdr.chunk_len-CHUNK_HDR_LEN);
+        memcpy(frame_buf + total_recv_bytes, recv_buf, msg_hdr.chunk_len-CHUNK_HDR_LEN);
 
         total_recv_bytes += recv_len - PKT_HDR_LEN;
 
         if (msg_hdr.chunk_len != recv_len - MSG_HDR_LEN) {
-            std::cout << "-----receive bytes size error -------" << stfd::endl;
+            std::cout << "-----receive bytes size error -------" << std::endl;
         }
         if (msg_hdr.chunk_num == msg_hdr.total_chunk_num) {
-            std::cout << "get full packets" << stfd::endl;
+            std::cout << "get full packets" << std::endl;
             break;
         }
     }

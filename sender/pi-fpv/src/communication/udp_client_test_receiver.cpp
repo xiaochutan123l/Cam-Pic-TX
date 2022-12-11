@@ -17,19 +17,6 @@ socklen_t m_sock_len_s;
 //uint16_t m_chunk_pl_len;
 //struct address m_addr;
 
-void check_header(uint8_t *recv_buf, int recv_len) {
-    std::cout << "type: " << int(get_msg_type(recv_buf)) << std::endl;
-    // TODO: print all header info.
-    /*
-    std::cout << "type: " << get_msg_type(recv_buf)
-        << ", flags: " << hdr.flags 
-        << ", total_chunk_num: " << hdr.total_chunk_num 
-        << ", chunk_num: " << hdr.chunk_num
-        << "chunk_len: " << hdr.chunk_len 
-        << std::endl;
-    */
-}
-
 int main() {
     m_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     m_serv.sin_family = AF_INET;
@@ -57,9 +44,13 @@ int main() {
     while (1) {
         recv_len = recvfrom(m_sockfd, recv_buf, recv_buf_len, 0, (struct sockaddr*)&m_client, &m_sock_len_c); 
         //chunk_hdr = unpack_header(recv_buf, HEADER_LEN);
-        check_header(recv_buf, recv_len);
         struct msg_header msg_hdr;
         unpack_msg_header(recv_buf, &msg_hdr);
+
+        // copy header and print.
+        struct packet_header pkt_hdr;
+        memcpy(&pkt_hdr, recv_buf, PKT_HDR_LEN);
+        std::cout << pkt_hdr << std::endl;
 
         memcpy(frame_buf + total_recv_bytes, recv_buf, msg_hdr.chunk_len-CHUNK_HDR_LEN);
 
@@ -77,7 +68,7 @@ int main() {
     std::string msg = "received successully!";
     uint16_t msg_len = sizeof(msg);
     const char *m_snd_buf = msg.c_str();
-    std::cout << "msg len : " << msg_len << std::endl;
+    std::cout << "msg len : " << msg_len << ", received: "<< total_recv_bytes << " bytes" << std::endl;
 
     sendto(m_sockfd, m_snd_buf, msg_len, 0, (struct sockaddr *)&m_client, m_sock_len_c);
 

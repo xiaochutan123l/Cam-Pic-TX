@@ -2,12 +2,11 @@
 #define _PACKET_HANDLER_H_
 #include <stdint.h>
 #include <cstring>
+#include <iostream>
+
 /*
 UDP packet handling related.
 */
-
-// deprecated.
-#define HEADER_LEN 8
 
 #define PAYLOAD_LEN 1400 // header not included
 #define CHUNK_SIZE HEADER_LEN + PAYLOAD_LEN
@@ -17,29 +16,6 @@ UDP packet handling related.
 #define PKT_HDR_LEN_ACK 12
 #define MSG_HDR_LEN 12
 #define CHUNK_HDR_LEN 8
-
-
-// deprecated
-/**
-* Packet header for each UDP packet.
-0                   1                   2                   3
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|      Type     |     Flags     |      Total Chunk Number       |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|         Chunk Number          |         Chunk Length          |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-*/
-/*
-struct chunk_header {
-	uint8_t type;
-	uint8_t flags;
-	uint16_t total_chunk_num;
-	uint16_t chunk_num;
-	uint16_t chunk_len;
-};
-*/
 
 /* Messager Header*/
 /*
@@ -156,7 +132,7 @@ If realtime requierd, then set flag to urgen, or use separat wireless module for
 - Data: A serials of requests.
 */
 
-enum class sock_type {
+enum class Sock_type {
 	UDP,
 	TCP,
 	RAW_UDP,
@@ -171,37 +147,48 @@ struct chunk_header_video {
 	uint8_t codec;
 	uint8_t reserved;
 	uint32_t timestamp;
+
+	friend std::ostream& operator << (std::ostream& o, const chunk_header_video& hdr);
 };
 
 // 8 byte
 struct chunk_header_audio {
 	uint8_t format;
-	uint8_t frame_rate;
-	uint8_t codec;
-	uint8_t reserved;
+	uint8_t channel_num;
+	uint8_t sample_rate;
+	uint8_t depth;
 	uint32_t timestamp;
+
+	friend std::ostream& operator << (std::ostream& o, const chunk_header_audio& hdr);
 };
 
+// 8 Byte
 union chunk_header {
 	struct chunk_header_video hdr_v;
 	struct chunk_header_audio hdr_a;
 };
 
-struct msg_header{
+// 20 Byte
+struct msg_header {
 	uint8_t msg_type;
 	uint8_t flags;
 	uint16_t chunk_num;
 	uint16_t total_chunk_num;
 	uint16_t chunk_len;
 	uint32_t frame_seq_num;
+
+	friend std::ostream& operator << (std::ostream& o, const msg_header& hdr);
 };
 
 // 20 Byte
-struct packet_header{
+struct packet_header {
 	struct msg_header msg_header;
 	union chunk_header chunk_header;
+
+	friend std::ostream& operator << (std::ostream& o, const packet_header& hdr);
 };
 
+// TODO: add operator << for acks
 // 12 Byte
 struct ack_packet_header {
 	uint8_t msg_type;
@@ -212,6 +199,8 @@ struct ack_packet_header {
 	uint16_t frame_ack;
 	uint16_t chunk_len;
 	uint16_t request_num;	
+
+	//friend std::ostream operator << (std::ostream& o, const ack_packet_header& hdr);
 };
 
 enum class MSG_TYPE {
@@ -270,12 +259,6 @@ void unpack_packet_header(uint8_t * pkt_buffer, struct packet_header *pkt_hdr);
 uint8_t get_msg_type(uint8_t * pkt_buffer);
 
 void pack_packet_header(uint8_t * pkt_buffer, struct packet_header &hdr);
-
-void print_pkt_header(uint8_t *buf, int len);
-
-void print_msg_header(uint8_t *buf, int len);
-
-void print_chunk_header(uint8_t *buf, int len);
 
 /*
 parse header from a chunk.

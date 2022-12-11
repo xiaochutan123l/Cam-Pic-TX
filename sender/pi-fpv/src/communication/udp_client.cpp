@@ -10,9 +10,9 @@ Udp_client::Udp_client() {
 	init_udp();
 }
 
-Udp_client::Udp_client(sock_type type) {
+Udp_client::Udp_client(Sock_type type) {
 	switch(type) {
-		case sock_type::UDP:
+		case Sock_type::UDP:
 			init_udp();
 			break;
 	}

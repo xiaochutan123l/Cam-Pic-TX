@@ -14,7 +14,7 @@ class Udp_client : public Sender {
 public:
     // defualt udp.
     Udp_client();
-    Udp_client(sock_type type);
+    Udp_client(Sock_type type);
 
     void connect(struct address &addr);
 

@@ -21,7 +21,7 @@ int main() {
     union chunk_header hdr_muster;
     hdr_muster.hdr_v = {0, 30, 1, 0, 1234};
     //MSG_TYPE type = MSG_TYPE::VIDEO_MSG;
-    MSG_TYPE type = MSG_TYPE::AUDIO_MSG;
+    MSG_TYPE type = MSG_TYPE::VIDEO_MSG;
     MSG_FLAGS flags = MSG_FLAGS::NONE;
     sdr->send_frame(frame_buf,
                     frame_len,
@@ -29,7 +29,7 @@ int main() {
                     static_cast<uint8_t>(flags),
                     &hdr_muster
                     );
-
+    printf("sent: %d bytes\n", frame_len);
     int len = sdr->recv_packet(recv_buf, (size_t)recv_buf_len);
     printf("received: %s\n", recv_buf);
 

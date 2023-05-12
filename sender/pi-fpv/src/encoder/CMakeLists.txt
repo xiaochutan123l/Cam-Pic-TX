@@ -1,0 +1,1 @@
+add_library(encoder encoder_h264.cpp)

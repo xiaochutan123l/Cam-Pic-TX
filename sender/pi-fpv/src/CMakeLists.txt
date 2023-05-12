@@ -2,11 +2,12 @@
 
 #project(fpv_sender)
 
-include_directories(
-    camera
-    camera/cam_driver
-    )
-
 add_subdirectory(camera)
-link_libraries(camera)
-add_executable(stream_test stream_cap_test.cpp camera)
+
+add_subdirectory(communication)
+
+add_subdirectory(encoder)
+
+add_executable(fpv_sender fpv_sender.cpp)
+
+target_link_libraries(fpv_sender camera communication encoder)

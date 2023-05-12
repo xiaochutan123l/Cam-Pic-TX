@@ -1,6 +1,5 @@
 #pragma once 
 
-#include "cam_controller_impl.h"
 #include "camera_config.h"
 
 

@@ -1,4 +1,4 @@
-#include "fmt_utils.h"
+#include "../../include/camera/fmt_utils.h"
 
 __u32 to_v4l2_fmt(IMAGE_FMT fmt) {
     // https://docs.huihoo.com/doxygen/linux/kernel/3.7/uapi_2linux_2videodev2_8h_source.html

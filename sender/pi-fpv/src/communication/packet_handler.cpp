@@ -1,4 +1,4 @@
-#include "packet_handler.h"
+#include "../../include/communication/packet_handler.h"
 
 std::ostream& operator << (std::ostream& o, const chunk_header_video& hdr) {
     return std::cout << "Video chunk header: " 

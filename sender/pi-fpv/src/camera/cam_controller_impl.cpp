@@ -1,4 +1,4 @@
-#include "../../include/camera/cam_controller_impl.h"
+#include "cam_controller_impl.h"
 #include <iostream>
 
 Cam_Controller_Impl::Cam_Controller_Impl(Stream_fmt fmt, char *dev_name)

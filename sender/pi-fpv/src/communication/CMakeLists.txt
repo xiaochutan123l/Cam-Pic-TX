@@ -4,3 +4,5 @@ set(SRC_LIST
     )
 
 add_library(communication ${SRC_LIST})
+
+target_include_directories(communication PUBLIC ../../include/communication)

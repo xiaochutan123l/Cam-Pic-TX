@@ -1,15 +1,8 @@
-1. Modify Makefile to adapt separate include and source folders.
-2. write interfaces:
-        - udp_client
-        - udp_server
-        - camera_module
-3. implement interface:
-        - udp_client
-        - udp_server
-        - camera_module
-4. implement sender.cpp as new main file.
-5. implement latency test. (test_helper class and test_main file)
+## 编解码模块
+1. 添加ffmpeg路径到cmake
+2. 写一个yuyu等原始格式转为jpg/jpeg格式的转换器，c++，以便之后的编解码模块测试，可以直接打开图像检验编解码正确性
+3. 封装encoder
+4. 封装decoder
+5. 本地测试encoder 和 decoder
 
---place header or helper files like packet_handler and xxx_config to include folder.
-
---classify code and add namespace
+## 传输测试

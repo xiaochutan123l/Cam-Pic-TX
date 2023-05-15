@@ -349,15 +349,15 @@ int main() {
     set_fmt.width = 2560;
     set_fmt.height = 1440;
     
-    set_fmt.pixelformat = V4L2_PIX_FMT_JPEG;
-    //set_fmt.pixelformat = V4L2_PIX_FMT_YUYV;
+    //set_fmt.pixelformat = V4L2_PIX_FMT_JPEG;
+    set_fmt.pixelformat = V4L2_PIX_FMT_YUYV;
     set_fmt.field = V4L2_FIELD_INTERLACED;
     set_format(&set_fmt);
 
 
     struct v4l2_fract sparm;
     sparm.numerator = 1;
-    sparm.denominator = 120;
+    sparm.denominator = 30;
 
     set_s_param(&sparm);
 

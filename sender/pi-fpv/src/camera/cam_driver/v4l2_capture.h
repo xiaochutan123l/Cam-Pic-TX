@@ -34,6 +34,8 @@ extern void stop_capturing();
 extern void uninit_device();
 extern void close_device();
 
+extern void set_encode_control();
+
 #ifdef __cplusplus
 }
 #endif

@@ -52,6 +52,10 @@ IMAGE_FMT parse_fmt(std::string fmt, std::string &filename_ext) {
         filename_ext = ".yuv";
         return IMAGE_FMT::YUV420P;
     }  
+    else if (fmt == "H264") {
+        filename_ext = ".h264";
+        return IMAGE_FMT::H264;
+    }  
     else {
         std::cerr << "wrong flag " << fmt << "or wrong sequence" << std::endl;
         std::cerr << info << std::endl;
@@ -89,7 +93,7 @@ int parse_frame_num(std::string num) {
 frame capture handler callback function.
 */
 void handler_cb(void *start, uint32_t length) {
-    printf("handler callback function\n");
+    printf("handler callback function, frame size: %d bytes\n", length);
 	//FILE *out_fp = fopen("./test.jpg","w");
     FILE *out_fp = fopen(filename.c_str(), "w");
 	if(out_fp==NULL) {
@@ -171,5 +175,5 @@ int main (int argc, char *argv[]) {
     std::cout << "exit" << std::endl;
     delete cam;
  
-    return 1;
+    return 0;
 }

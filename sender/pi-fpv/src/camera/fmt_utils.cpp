@@ -15,8 +15,10 @@ __u32 to_v4l2_fmt(IMAGE_FMT fmt) {
         case IMAGE_FMT::YUV422:
             return V4L2_PIX_FMT_H264;
         */
-        case IMAGE_FMT::YUV420P:
+        case IMAGE_FMT::H264:
             return V4L2_PIX_FMT_H264;
+        case IMAGE_FMT::YUV420P:
+            return V4L2_PIX_FMT_YUV420;
         default:
             return 0;
     }

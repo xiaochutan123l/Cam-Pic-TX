@@ -280,7 +280,9 @@ void set_frame_format(struct v4l2_pix_format *set_fmt) {
         /* Preserve original settings as set by v4l2-ctl for example */
         if (-1 == ioctl(fd, VIDIOC_G_FMT, &fmt))
                 errno_exit("VIDIOC_G_FMT");
-
+        printf("frame format: %d ", fmt.fmt.pix.pixelformat);
+        printf("frame width: %d ", fmt.fmt.pix.width);
+        printf("frame height: %d\n", fmt.fmt.pix.height);
         // That should allow setting the capture-side frame rate. 
         // It's your task to make sure you're reading fast enough not to get frame drops.
         set_fmt->width = fmt.fmt.pix.width;
@@ -307,10 +309,51 @@ void set_frame_rate(struct v4l2_fract *s_parm) {
         if (-1 == ioctl(fd, VIDIOC_G_PARM, &streamparm)) {
                 errno_exit("VIDIOC_G_PARM");
         }
-
+        printf("frame rate: %d/%d\n", s_parm->numerator, s_parm->denominator);
         s_parm->numerator = streamparm.parm.capture.timeperframe.numerator;
         s_parm->denominator = streamparm.parm.capture.timeperframe.denominator;
+        //set_encode_control();
 }
+
+//https://www.kernel.org/doc/html/v4.9/media/uapi/v4l/vidioc-g-ctrl.html#c.v4l2_control
+//https://www.kernel.org/doc/html/v4.9/media/uapi/v4l/extended-controls.html
+/*
+OV5647
+video_bitrate_mode：控制视频的比特率模式（例如，固定比特率或变量比特率）。
+video_bitrate：控制视频的比特率。
+repeat_sequence_header：控制是否重复序列头。
+force_key_frame：强制下一帧为关键帧。
+h264_minimum_qp_value：控制H.264编码的最小QP值。
+h264_maximum_qp_value：控制H.264编码的最大QP值。
+h264_i_frame_period：控制H.264编码的I帧周期。
+h264_level：控制H.264编码的级别。
+h264_profile：控制H.264编码的配置文件。
+*/
+void set_encode_control() {
+        // 设置摄像头h264编码
+        struct v4l2_control ctl;
+        CLEAR(ctl);
+        ctl.id = V4L2_CID_MPEG_VIDEO_H264_I_PERIOD;
+        ctl.value = 1;
+        // H264是MPEG编码的一种
+        //V4L2_CID_MPEG_VIDEO_H264_MIN_QP
+        //V4L2_CID_MPEG_VIDEO_H264_MAX_QP
+        //V4L2_CID_MPEG_VIDEO_H264_PROFILE
+        //V4L2_CID_MPEG_VIDEO_H264_LEVEL
+        //V4L2_CID_MPEG_VIDEO_H264_I_PERIOD
+        //V4L2_CID_MPEG_VIDEO_FORCE_KEY_FRAME
+        if (-1 == ioctl(fd, VIDIOC_S_CTRL, &ctl)){
+            errno_exit("VIDIOC_S_CTRL");
+        } 
+        if (-1 == ioctl(fd, VIDIOC_G_CTRL, &ctl)) {
+            errno_exit("VIDIOC_G_CTRL");
+        }
+        else {
+                printf("set encode control succeed\n");
+        }
+}
+
+
 
 void close_device()
 {

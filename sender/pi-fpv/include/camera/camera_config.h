@@ -14,7 +14,7 @@ enum class IMAGE_FMT {
 	// cmd: v4l2-ctl --list-formats-ext to see what format are supported.
 	RGB24,
 	JPEG,
-	//H264,
+	H264,
 	MJPG,
 	//YUV444,
 	//YUV422,

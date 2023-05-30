@@ -33,7 +33,7 @@
 
 #include <libavcodec/avcodec.h>
 
-#define INBUF_SIZE 4096
+#define INBUF_SIZE 10240
 
 static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
                      char *filename)
@@ -41,12 +41,43 @@ static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
     FILE *f;
     int i;
 
-    f = fopen(filename,"wb");
+    //f = fopen(filename,"wb");
+    f = fopen(filename,"a");
+    printf("write file\n");
     fprintf(f, "P5\n%d %d\n%d\n", xsize, ysize, 255);
     for (i = 0; i < ysize; i++)
         fwrite(buf + i * wrap, 1, xsize, f);
     fclose(f);
 }
+
+void yuv420p_save(unsigned char *buf, int wrap, int xsize, int ysize, char *filename) {
+    FILE *f;
+    int i;
+
+    f = fopen(filename, "a");
+    if (!f) {
+        fprintf(stderr, "Could not open %s\n", filename);
+        exit(1);
+    }
+
+    for (i = 0; i < ysize; i++)
+        fwrite(buf + i * wrap, 1, xsize, f);
+
+    // /* Write Y plane */
+    // for (i = 0; i < ysize; i++)
+    //     fwrite(buf + i * wrap, 1, xsize, f);
+
+    // /* Write U plane */
+    // for (i = 0; i < ysize / 2; i++)
+    //     fwrite(buf + wrap * ysize + i * wrap / 2, 1, xsize / 2, f);
+
+    // /* Write V plane */
+    // for (i = 0; i < ysize / 2; i++)
+    //     fwrite(buf + wrap * ysize + wrap * ysize / 4 + i * wrap / 2, 1, xsize / 2, f);
+
+    fclose(f);
+}
+
 
 static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
                    const char *filename)
@@ -59,29 +90,44 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
         fprintf(stderr, "Error sending a packet for decoding\n");
         exit(1);
     }
-
+    printf("send packet return: %d\n", ret);
     while (ret >= 0) {
         ret = avcodec_receive_frame(dec_ctx, frame);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+        printf("receive frame ret: %d\n", ret);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+            printf("receive frame error:\n");
             return;
+        }
         else if (ret < 0) {
             fprintf(stderr, "Error during decoding\n");
             exit(1);
         }
-
+        printf("save frame\n");
         printf("saving frame %3d\n", dec_ctx->frame_number);
         fflush(stdout);
 
         /* the picture is allocated by the decoder. no need to
            free it */
         snprintf(buf, sizeof(buf), "%s-%d", filename, dec_ctx->frame_number);
-        pgm_save(frame->data[0], frame->linesize[0],
-                 frame->width, frame->height, buf);
+        printf("pgm_save: \n");
+        // pgm_save(frame->data[0], frame->linesize[0],
+        //         frame->width, frame->height, buf);
+
+        // pgm_save(frame->data[1], frame->linesize[1],
+        //         frame->width/2, frame->height/2, buf);
+
+        // pgm_save(frame->data[2], frame->linesize[2],
+        //         frame->width/2, frame->height/2, buf);
+        yuv420p_save(frame->data[0], frame->linesize[0], frame->width, frame->height, buf);
+        yuv420p_save(frame->data[1], frame->linesize[1], frame->width/2, frame->height/2, buf);
+        yuv420p_save(frame->data[2], frame->linesize[2], frame->width/2, frame->height/2, buf);
+
     }
 }
 
 int main(int argc, char **argv)
 {
+    av_log_set_level(AV_LOG_DEBUG);
     const char *filename, *outfilename;
     const AVCodec *codec;
     AVCodecParserContext *parser;
@@ -112,7 +158,8 @@ int main(int argc, char **argv)
 
     /* find the MPEG-1 video decoder */
     //codec = avcodec_find_decoder(AV_CODEC_ID_MPEG1VIDEO);
-    codec = avcodec_find_decoder_by_name("h264_v4l2m2m");
+    //codec = avcodec_find_decoder_by_name("h264_v4l2m2m");
+    codec = avcodec_find_decoder(AV_CODEC_ID_H264);
     
     if (!codec) {
         fprintf(stderr, "Codec not found\n");
@@ -183,10 +230,13 @@ int main(int argc, char **argv)
     decode(c, frame, NULL, outfilename);
 
     fclose(f);
-
+    printf("close f\n");
     av_parser_close(parser);
+    printf("av parser closr\n");
     avcodec_free_context(&c);
+    printf("free context\n");
     av_frame_free(&frame);
+    printf("frame free\n");
     av_packet_free(&pkt);
 
     return 0;

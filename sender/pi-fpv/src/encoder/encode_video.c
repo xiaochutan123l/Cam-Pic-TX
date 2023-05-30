@@ -46,6 +46,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
         printf("Send frame %3"PRId64"\n", frame->pts);
 
     ret = avcodec_send_frame(enc_ctx, frame);
+    printf("avcodec send frame");
     if (ret < 0) {
         fprintf(stderr, "Error sending a frame for encoding\n");
         exit(1);
@@ -78,12 +79,14 @@ int main(int argc, char **argv)
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
     if (argc <= 2) {
-        fprintf(stderr, "Usage: %s <output file> <codec name>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <input file> <output file>\n", argv[0]);
         exit(0);
     }
-    filename = argv[1];
-    codec_name = argv[2];
+    const char *in_file_name = argv[1];
+    filename = argv[2];
+    //codec_name = argv[2];
 
+    codec_name = "libx264";
     printf("trying to find codec...\n");
 
     /* find the mpeg1video encoder */
@@ -104,15 +107,16 @@ int main(int argc, char **argv)
         exit(1);
     printf("alloc...ok\n");
     /* put sample parameters */
-    c->bit_rate = 400000;
+    // 比特率会导致图像压缩更厉害，如果低比特率的话，解码出来比较模糊
+    c->bit_rate = 4000000;
     /* resolution must be a multiple of two */
     //c->width = 352;
     //c->height = 288;
     c->width = 1280;
     c->height = 720;
     /* frames per second */
-    c->time_base = (AVRational){1, 25};
-    c->framerate = (AVRational){25, 1};
+    c->time_base = (AVRational){1, 30};
+    c->framerate = (AVRational){30, 1};
 
     /* emit one intra frame every ten frames
      * check frame pict_type before passing frame
@@ -120,15 +124,16 @@ int main(int argc, char **argv)
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    c->gop_size = 5;
+    //c->gop_size = 5;
+    c->gop_size = 1;
     //c->max_b_frames = 1;
     //c->pix_fmt = AV_PIX_FMT_YUV420P;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
 
     if (codec->id == AV_CODEC_ID_H264)
-        av_opt_set(c->priv_data, "preset", "slow", 0);
+        //av_opt_set(c->priv_data, "preset", "slow", 0);
         //av_opt_set(c->priv_data, "preset", "superfast", 0);
-        //av_opt_set(c->priv_data, "tune", "zerolatency", 0);
+        av_opt_set(c->priv_data, "tune", "zerolatency", 0);
     printf("open codec...\n");
     /* open it */
     ret = avcodec_open2(c, codec, NULL);
@@ -159,52 +164,107 @@ int main(int argc, char **argv)
     }
     printf("encode...\n");
     /* encode 1 second of video */
-    for (i = 0; i < 25; i++) {
-        fflush(stdout);
+    // for (i = 0; i < 25; i++) {
+    //     fflush(stdout);
 
-        /* Make sure the frame data is writable.
-           On the first round, the frame is fresh from av_frame_get_buffer()
-           and therefore we know it is writable.
-           But on the next rounds, encode() will have called
-           avcodec_send_frame(), and the codec may have kept a reference to
-           the frame in its internal structures, that makes the frame
-           unwritable.
-           av_frame_make_writable() checks that and allocates a new buffer
-           for the frame only if necessary.
-         */
-        ret = av_frame_make_writable(frame);
-        if (ret < 0)
-            exit(1);
+    //     /* Make sure the frame data is writable.
+    //        On the first round, the frame is fresh from av_frame_get_buffer()
+    //        and therefore we know it is writable.
+    //        But on the next rounds, encode() will have called
+    //        avcodec_send_frame(), and the codec may have kept a reference to
+    //        the frame in its internal structures, that makes the frame
+    //        unwritable.
+    //        av_frame_make_writable() checks that and allocates a new buffer
+    //        for the frame only if necessary.
+    //      */
+    //     ret = av_frame_make_writable(frame);
+    //     if (ret < 0)
+    //         exit(1);
 
-        /* Prepare a dummy image.
-           In real code, this is where you would have your own logic for
-           filling the frame. FFmpeg does not care what you put in the
-           frame.
-         */
-        /* Y */
-        for (y = 0; y < c->height; y++) {
-            for (x = 0; x < c->width; x++) {
-                frame->data[0][y * frame->linesize[0] + x] = x + y + i * 3;
-            }
-        }
+    //     /* Prepare a dummy image.
+    //        In real code, this is where you would have your own logic for
+    //        filling the frame. FFmpeg does not care what you put in the
+    //        frame.
+    //      */
+    //     /* Y */
+    //     for (y = 0; y < c->height; y++) {
+    //         for (x = 0; x < c->width; x++) {
+    //             frame->data[0][y * frame->linesize[0] + x] = x + y + i * 3;
+    //         }
+    //     }
 
-        /* Cb and Cr */
-        for (y = 0; y < c->height/2; y++) {
-            for (x = 0; x < c->width/2; x++) {
-                frame->data[1][y * frame->linesize[1] + x] = 128 + y + i * 2;
-                frame->data[2][y * frame->linesize[2] + x] = 64 + x + i * 5;
-            }
-        }
+    //     /* Cb and Cr */
+    //     for (y = 0; y < c->height/2; y++) {
+    //         for (x = 0; x < c->width/2; x++) {
+    //             frame->data[1][y * frame->linesize[1] + x] = 128 + y + i * 2;
+    //             frame->data[2][y * frame->linesize[2] + x] = 64 + x + i * 5;
+    //         }
+    //     }
 
-        frame->pts = i;
+    //     frame->pts = i;
 
-        /* encode the image */
-        encode(c, frame, pkt, f);
+    //     /* encode the image */
+    //     encode(c, frame, pkt, f);
+    // }
+
+    //在frame结构体中，data是一个指针数组，用于存储YUV分量的指针。data[0]指向Y分量的起始地址，data[1]指向U分量的起始地址，data[2]指向V分量的起始地址。通过这些指针，我们可以访问和操作帧的YUV数据。
+
+    // 打开文件
+    FILE *file = fopen(in_file_name, "rb");
+    if (file == NULL) {
+        printf("无法打开文件\n");
+        return 1;
     }
+
+    // 获取文件大小
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    rewind(file);
+
+    char *buffer = (char *)malloc(file_size + 1);
+    if (buffer == NULL) {
+        printf("内存分配失败\n");
+        return 1;
+    }
+
+    // // 读取文件内容到缓冲区
+    // size_t result = fread(buffer, 1, file_size, file);
+    // if (result != file_size) {
+    //     printf("读取文件失败\n");
+    //     return 1;
+    // }
+    // Read YUV data from input file
+    // Assuming planar YUV420 format with 8-bit components
+    uint8_t *y_ptr = frame->data[0];
+    uint8_t *u_ptr = frame->data[1];
+    uint8_t *v_ptr = frame->data[2];
+    int y_size = c->width * c->height;
+    int u_size = y_size / 4;
+    int v_size = y_size / 4;
+    ret = fread(y_ptr, 1, y_size, file);
+    ret += fread(u_ptr, 1, u_size, file);
+    ret += fread(v_ptr, 1, v_size, file);
+    if (file_size != y_size + u_size + v_size) {
+        printf("Failed to read input frame file size: %d, read size: %d\n", file_size, (y_size + u_size + v_size));
+    }
+
+    // 在缓冲区末尾添加字符串结束符
+    //buffer[file_size] = '\0';
+
+    
+
+    fflush(stdout);
+
+    //frame->data = buffer;
+    //memcpy(frame->data, buffer, result);
+    frame->pts = 0;
+    encode(c, frame, pkt, f);
+
     printf("encode out loop...\n");
     /* flush the encoder */
     encode(c, NULL, pkt, f);
-
+    // 关闭文件
+    fclose(file);
     /* Add sequence end code to have a real MPEG file.
        It makes only sense because this tiny examples writes packets
        directly. This is called "elementary stream" and only works for some
@@ -219,5 +279,7 @@ int main(int argc, char **argv)
     av_frame_free(&frame);
     av_packet_free(&pkt);
 
+    // free file read buffer
+    free(buffer);
     return 0;
 }

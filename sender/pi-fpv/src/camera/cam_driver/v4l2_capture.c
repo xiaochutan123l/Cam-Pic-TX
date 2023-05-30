@@ -330,7 +330,8 @@ h264_level：控制H.264编码的级别。
 h264_profile：控制H.264编码的配置文件。
 */
 void set_encode_control() {
-        // 设置摄像头h264编码
+        // 设置摄像头h264编码，视频格式里的H264是指摄像头模块直接输出编码后的数据给v4l2，
+        // 这里的指v4l2会从摄像头模块获取原始图像数据然后进行h264或其他格式编码，然后返回编码后数据
         struct v4l2_control ctl;
         CLEAR(ctl);
         ctl.id = V4L2_CID_MPEG_VIDEO_H264_I_PERIOD;

@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     printf("alloc...ok\n");
     /* put sample parameters */
     // 比特率会导致图像压缩更厉害，如果低比特率的话，解码出来比较模糊
-    c->bit_rate = 4000000;
+    c->bit_rate = 2000000;
     /* resolution must be a multiple of two */
     //c->width = 352;
     //c->height = 288;
@@ -121,12 +121,12 @@ int main(int argc, char **argv)
     /* emit one intra frame every ten frames
      * check frame pict_type before passing frame
      * to encoder, if frame->pict_type is AV_PICTURE_TYPE_I
-     * then gop_size is ignored and the output of encoder
+     * then gop_size is ignored and the output of encoder 
      * will always be I frame irrespective to gop_size
      */
     //c->gop_size = 5;
-    c->gop_size = 1;
-    //c->max_b_frames = 1;
+    c->gop_size = 5;
+    c->max_b_frames = 0;
     //c->pix_fmt = AV_PIX_FMT_YUV420P;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
 
@@ -220,8 +220,8 @@ int main(int argc, char **argv)
     fseek(file, 0, SEEK_END);
     long file_size = ftell(file);
     rewind(file);
-
-    char *buffer = (char *)malloc(file_size + 1);
+    printf("file size: %d\n", file_size);
+    uint8_t *buffer = (uint8_t *)malloc(file_size);
     if (buffer == NULL) {
         printf("内存分配失败\n");
         return 1;
@@ -235,15 +235,18 @@ int main(int argc, char **argv)
     // }
     // Read YUV data from input file
     // Assuming planar YUV420 format with 8-bit components
-    uint8_t *y_ptr = frame->data[0];
-    uint8_t *u_ptr = frame->data[1];
-    uint8_t *v_ptr = frame->data[2];
+    // uint8_t *y_ptr = frame->data[0];
+    // uint8_t *u_ptr = frame->data[1];
+    // uint8_t *v_ptr = frame->data[2];
     int y_size = c->width * c->height;
     int u_size = y_size / 4;
     int v_size = y_size / 4;
-    ret = fread(y_ptr, 1, y_size, file);
-    ret += fread(u_ptr, 1, u_size, file);
-    ret += fread(v_ptr, 1, v_size, file);
+    // ret = fread(y_ptr, 1, y_size, file);
+    // ret += fread(u_ptr, 1, u_size, file);
+    // ret += fread(v_ptr, 1, v_size, file);
+    size_t s = fread(buffer, 1, y_size + u_size + v_size, file);
+    printf("read file size: %d\n", s);
+    memcpy(frame->data[0], buffer, s);
     if (file_size != y_size + u_size + v_size) {
         printf("Failed to read input frame file size: %d, read size: %d\n", file_size, (y_size + u_size + v_size));
     }

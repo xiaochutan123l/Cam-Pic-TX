@@ -8,8 +8,8 @@ project(fpv_sender VERSION 1.0 LANGUAGES C CXX)
 
 #set(CMAKE_CXX_FLAGS_RELEASE "-O2") 
 
-add_subdirectory(src)
+#add_subdirectory(src)
 
 add_subdirectory(test)
 
-#add_subdirectory(app)
+add_subdirectory(app)

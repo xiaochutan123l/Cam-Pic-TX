@@ -68,7 +68,7 @@ Chunk：Header - Video
 - Format: Video frame format
 - Frame Rate: Frame rate
 - Codec: encoder name
-- Reserved: for potential useage
+- Reserved: for potential usage
 - Timestamp: timestamp of this frame
 
 Chunk Header - Audio

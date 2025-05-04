@@ -4,6 +4,8 @@
 #include <string> 
 #include <map>
 
+#include <chrono>
+
 //using namespace std;
 uint8_t frame_rate = 30;
 
@@ -165,10 +167,23 @@ int main (int argc, char *argv[]) {
     //cam->start(handler_cb_fake);
     std::cout << "camera ready, wait for capturing" << std::endl;
 
-    for (int i = 0; i < frame_count; i++){
-        filename = filename_base + std::to_string(i) + filename_ext;
+    // warm up camera.
+    for (int i = 0; i < 5; i++){
+        filename = filename_base + std::to_string(i) + filename_ext + "_warmup";
         cam->get_frame();
     }
+    long long total_time = 0;
+    // test frame capture.
+    for (int i = 0; i < frame_count; i++){
+        filename = filename_base + std::to_string(i) + filename_ext;
+        auto start = std::chrono::high_resolution_clock::now();
+        cam->get_frame();
+        auto end = std::chrono::high_resolution_clock::now();
+        total_time += std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    }
+    double avg_time = static_cast<double>(total_time) / frame_count;
+    std::cout << "平均每帧耗时: " << avg_time << " 毫秒" << std::endl;
+    std::cout << "估算帧率: " << 1000.0 / avg_time << " FPS" << std::endl;
 
     std::cout << "capture done" << std::endl;
     cam->close();
